@@ -1,6 +1,6 @@
 {
   "name": "sveltekit-meta",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "SvelteKit metadata utilities",
   "license": "MIT",
   "keywords": ["svelte", "sveltekit", "metadata", "seo", "utility", "meta-tags", "open-graph", "head", "svelte-meta", "svelte-seo"],

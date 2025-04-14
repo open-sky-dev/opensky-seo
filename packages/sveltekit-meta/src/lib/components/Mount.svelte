@@ -1,12 +1,10 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { afterNavigate } from '$app/navigation'
-	import { onMount } from 'svelte'
 
 	let metaTags = $state(page.data.metaTags)
 
 	afterNavigate(() => {
-		console.log('ARRIVED', page)
 		metaTags = page.data.metaTags
 	})
 
@@ -247,5 +245,3 @@
 		{/if}
 	{/each}
 </svelte:head>
-
-<p>Title: {page.data.metaTags.title}</p>
