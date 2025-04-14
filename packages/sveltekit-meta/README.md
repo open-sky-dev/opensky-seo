@@ -2,6 +2,22 @@
 
 A powerful, lightweight solution for managing meta tags in SvelteKit applications with intelligent data cascading.
 
+You define your metadata in `+page.ts` or `+layout.ts` load functions, using our helper functions for simpler code - like so:
+
+```typescript
+// src/routes/blog/[slug]/+page.ts
+import { pageMetaLoad } from 'sveltekit-meta';
+
+export const load = pageMetaLoad({
+  title: 'My Amazing Blog Post',
+  description: 'This is a detailed description of my blog post'
+});
+```
+
+Ask [ChatGPT Questions](https://chatgpt.com/share/67fc80e9-b368-800d-9689-d0965fae8b86)
+
+Read [blog post](https://github.com/notnotjake/sveltekit-meta/blob/master/design.md)
+
 ## Table of Contents
 
 - [Features](#features)
@@ -24,16 +40,16 @@ A powerful, lightweight solution for managing meta tags in SvelteKit application
 - **Type Safe**: Fully typed with TypeScript for better developer experience
 - **Flexible Integration**: Works with SvelteKit's layout and page structure
 - **Performance Optimized**: Minimal runtime overhead
-- **SEO-friendly warnings**: Automatic warnings for oversized titles and descriptions
+- **SEO-friendly warnings**: Fully supports server-side rendering! Plus built in warnings for meta tag issues
 
 ## Installation
 
 ```bash
-npm install sveltekit-meta
+bun add sveltekit-meta
 # or
 pnpm add sveltekit-meta
 # or
-bun add sveltekit-meta
+npm install sveltekit-meta
 ```
 
 ## Quick Start
@@ -42,12 +58,12 @@ bun add sveltekit-meta
 
 ```typescript
 // src/routes/+layout.ts
-import MetaTags from 'sveltekit-meta';
+import { baseMetaLoad } from 'sveltekit-meta';
 
-export const load = MetaTags.baseMetaLoad({
+export const load = baseMetaLoad({
   sitename: 'My SvelteKit App',
   title: 'Welcome',
-  titleTemplate: '{sitename} - {page}',
+  titleTemplate: 'My SvelteKit App - {page}',
   description: 'A fantastic SvelteKit application',
   icon: './favicon.png'
 });
@@ -72,19 +88,20 @@ export const load = MetaTags.baseMetaLoad({
 
 ```typescript
 // src/routes/blog/+layout.ts
-import MetaTags from 'sveltekit-meta';
+import { layoutMetaLoad } from 'sveltekit-meta';
 
-export const load = MetaTags.layoutMetaLoad({
+export const load = layoutMetaLoad({
   title: 'Blog',
+  titleTemplate: 'Svelte Blog - {page}',
   description: 'Read our latest articles and updates'
 });
 ```
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import MetaTags from 'sveltekit-meta';
+import { pageMetaLoad } from 'sveltekit-meta';
 
-export const load = MetaTags.pageMetaLoad({
+export const load = pageMetaLoad({
   title: 'My Amazing Blog Post',
   description: 'This is a detailed description of my blog post'
 });
@@ -98,15 +115,17 @@ And that's it! Your meta tags will be automatically generated and updated across
 
 SvelteKit Meta uses a data cascade pattern to efficiently manage metadata:
 
-1. **Base Metadata**: Set at the root layout level
-2. **Layout Metadata**: Each layout can extend or override parent metadata
+1. **Base Metadata**: Set at the root layout level or anywhere else in the project to override and start fresh.
+2. **Layout Metadata**: Each layout can extend or override parent metadata. Unlike other tools, you can have many layers of layout metadata set.
 3. **Page Metadata**: Pages can further customize metadata for specific routes
 
-Metadata flows down through your application's routing hierarchy, with lower levels being able to selectively override higher-level values.
+Metadata flows down through your application's routing hierarchy, with lower levels being able to selectively override higher-level values. 
+
+The provided helpers for writing the load functions take care of passing parent data and data from any `+page.server.ts` load functions down to the page. Other packages will lose the data from page server load functions, but using these helpers ensures that the page receives everything from the data cascade.
 
 ### Available Helpers
 
-SvelteKit Meta provides several helper functions to simplify integration:
+SvelteKit Meta provides several helper functions to simplify integration. You still have to create `+page.ts` and `+layout.ts` files but these make it simpler to define your meta tags with minimal boilerplate code
 
 #### `baseMetaLoad(metaTags)`
 
@@ -126,11 +145,15 @@ For more complex scenarios where you need access to the full SvelteKit load even
 
 #### `parseMeta(parentTags, setTags)`
 
-Directly merge parent metadata with new metadata (used internally by the other helpers).
+If you don't want to use these helpers you can use parseMeta directly. You can use it by spreading its output onto your return. Directly merge parent metadata with new metadata (used internally by the other helpers). 
+
+If you use this you must deal with the `parent` and `data` properties from your load functions LoadEvent argument or else data from `+page.server.ts` load function will be lost.
 
 ## Advanced Usage
 
 ### Accessing Route Parameters
+
+In most cases, instead of defining your load function and dealing with inherited data, you can use the advancedMetaLoad helper function as it allows you to write code to run as a callback just like a normal load function, except that we deal with adding back the inherited data.
 
 For dynamic routes, you can use the advanced load helper to incorporate route parameters:
 
