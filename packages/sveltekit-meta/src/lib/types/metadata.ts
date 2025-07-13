@@ -64,6 +64,12 @@ export type Metadata = {
 	 * Used to determine appropriate meta tags and social card formats
 	 */
 	type?: ContentType
+
+	/** Additional meta, link, or script tags */
+	additionalTags?: Array<{
+		tagType: 'meta' | 'link' | 'script'
+		[key: string]: any
+	}>
 } & ImageConfig &
 	VideoConfig
 
