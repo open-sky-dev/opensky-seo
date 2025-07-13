@@ -1,11 +1,12 @@
 <script lang="ts">
 	import { page } from '$app/state'
 	import { afterNavigate } from '$app/navigation'
+	import { mergeMetadataObjects } from './merge'
 
-	let metaTags = $state(page.data.metaTags)
+	let metaTags = $state.frozen(mergeMetadataObjects(page.data, page.route.id || '/'))
 
 	afterNavigate(() => {
-		metaTags = page.data.metaTags
+		metaTags = mergeMetadataObjects(page.data, page.route.id || '/')
 	})
 
 	let combinedTitle = $derived.by(() => {

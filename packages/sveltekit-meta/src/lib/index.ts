@@ -1,6 +1,7 @@
 import type { Metadata, ParentMetadata } from './types/metadata'
 import type { LoadFunctionCallback, AdvancedLoadContext } from './types/advanced-load'
 import type { Load, LoadEvent, ServerLoadEvent } from '@sveltejs/kit'
+import { createMetadataObject, mergeMetadataObjects } from './components/merge'
 
 let DEBUG = false
 
@@ -13,6 +14,7 @@ export function enableDebug(enable: boolean = true) {
  * @param parentTags Metadata from parent layout (optional)
  * @param setTags Metadata to set for current route
  * @returns Object with merged metaTags
+ * @deprecated Use the new load wrapper functions instead
  */
 export function parseMeta(parentTags: ParentMetadata | null, setTags: Metadata): { metaTags: any } {
 	if (DEBUG) console.log('parse start', performance.now())
@@ -66,14 +68,13 @@ export function parseMeta(parentTags: ParentMetadata | null, setTags: Metadata):
  */
 export function baseMetaLoad(metaTags: Metadata): Load {
 	if (DEBUG) console.log('base meta load', performance.now())
-	return async ({ parent, data }) => {
-		const parentData = await parent()
-		const { parentMetaTags, ...parentRest } = parentData
-
+	return async (event: LoadEvent) => {
+		const routeId = event.route.id || '/'
+		const metaObject = createMetadataObject(routeId, metaTags)
+		
 		return {
-			...parentRest,
-			...data,
-			...parseMeta(null, metaTags)
+			...event.data,
+			[metaObject.id]: metaObject
 		}
 	}
 }
@@ -85,13 +86,13 @@ export function baseMetaLoad(metaTags: Metadata): Load {
  */
 export function layoutMetaLoad(metaTags: Metadata): Load {
 	if (DEBUG) console.log('layout meta load', performance.now())
-	return async ({ parent, data }) => {
-		const parentData = await parent()
-		const parentTags = parentData.metaTags as ParentMetadata
+	return async (event: LoadEvent) => {
+		const routeId = event.route.id || '/'
+		const metaObject = createMetadataObject(routeId, metaTags)
+		
 		return {
-			...parentData,
-			...data,
-			...parseMeta(parentTags, metaTags)
+			...event.data,
+			[metaObject.id]: metaObject
 		}
 	}
 }
@@ -103,13 +104,13 @@ export function layoutMetaLoad(metaTags: Metadata): Load {
  */
 export function pageMetaLoad(metaTags: Metadata): Load {
 	if (DEBUG) console.log('page meta load', performance.now())
-	return async ({ parent, data }) => {
-		const parentData = await parent()
-		const parentTags = parentData.metaTags as ParentMetadata
+	return async (event: LoadEvent) => {
+		const routeId = event.route.id || '/'
+		const metaObject = createMetadataObject(routeId, metaTags)
+		
 		return {
-			...parentData,
-			...data,
-			...parseMeta(parentTags, metaTags)
+			...event.data,
+			[metaObject.id]: metaObject
 		}
 	}
 }
@@ -118,7 +119,7 @@ export function pageMetaLoad(metaTags: Metadata): Load {
 	 * Helps to create a SvelteKit Load function that handles merging parent/server
 	 * data while you provide the core page logic in a callback.
 	 *
-	 * The wrapper automatically merges `parentData`, `serverData`, and your callback's
+	 * The wrapper automatically merges `serverData` and your callback's
 	 * result. (Redirects/errors from server load functions automatically pass through).
 	 *
 	 * Your callback `loadFunction` receives `{ event, parentTags }` that it can use.
@@ -134,6 +135,7 @@ export function pageMetaLoad(metaTags: Metadata): Load {
 	 *     return { postSlug: slug, ...metaResult };
 	 * });
 	 * ```
+	 * @deprecated Use the new load wrapper functions instead
 	 */
 export function advancedMetaLoad(loadFunction: LoadFunctionCallback): Load {
 	return async (event: LoadEvent) => {
@@ -152,6 +154,7 @@ export function advancedMetaLoad(loadFunction: LoadFunctionCallback): Load {
 }
 
 export { default as MetaTags } from './components/Mount.svelte'
+export { mergeMetadataObjects } from './components/merge'
 
 export * from './types/metadata'
 
@@ -160,5 +163,6 @@ export default {
 	layoutMetaLoad,
 	baseMetaLoad,
 	pageMetaLoad,
-	advancedMetaLoad
+	advancedMetaLoad,
+	mergeMetadataObjects
 }
