@@ -288,6 +288,25 @@ type ContentTypeAdvanced = {
 
 > Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. The library will warn and use the plural version if both are specified.
 
+## Testing
+
+This package includes comprehensive unit tests and a full SvelteKit test project:
+
+### Unit Tests
+```bash
+npm test              # Run unit tests
+npm run test:watch    # Run tests in watch mode
+npm run test:coverage # Run tests with coverage
+```
+
+### Integration Test Project
+```bash
+npm run test-project:install  # Install test project dependencies
+npm run test-project:dev      # Build package and run test project
+```
+
+The test project demonstrates all functionality in a real SvelteKit environment. See `test-project/README.md` for detailed testing instructions.
+
 ## License
 
 MIT License
