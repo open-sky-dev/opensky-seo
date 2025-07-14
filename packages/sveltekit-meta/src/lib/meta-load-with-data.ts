@@ -1,6 +1,6 @@
-import type { Metadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata } from './types/metadata'
 import type { Load } from '@sveltejs/kit'
-import { deriveKeyFromRoute, checkData } from './utils'
+import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
 /**
  * Creates a page load function that adds metadata with access to load context.
@@ -19,26 +19,14 @@ import { deriveKeyFromRoute, checkData } from './utils'
  * ```
  */
 export function metaLoadWithDataPage(
-	callback: (context: { data: any; route: any; params: any; url: any }) => Metadata
+	callback: (context: { data: any; route: any; params: any; url: any }) => BaseMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaKey = deriveKeyFromRoute({
-			routeId: route.id,
-			type: 'page'
-		})
-
 		const metaTags = callback({ data, route, params, url })
-		const cleanedTags = checkData(metaTags)
 
 		return {
 			...data,
-			[metaKey]: {
-				routeId: route.id,
-				layerType: 'page',
-				params,
-				url,
-				metadata: cleanedTags
-			}
+			...addMetaTagsPage(metaTags)
 		}
 	}
 }
@@ -60,25 +48,14 @@ export function metaLoadWithDataPage(
  * ```
  */
 export function metaLoadWithDataLayout(
-	callback: (context: { data: any; route: any; params: any; url: any }) => Metadata
+	callback: (context: { data: any; route: any; params: any; url: any }) => LayoutMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaKey = deriveKeyFromRoute({
-			routeId: route.id,
-			type: 'layout'
-		})
-
 		const metaTags = callback({ data, route, params, url })
-		const cleanedTags = checkData(metaTags)
 
 		return {
 			...data,
-			[metaKey]: {
-				routeId: route.id,
-				layerType: 'layout',
-				params,
-				metadata: cleanedTags
-			}
+			...addMetaTagsLayout(metaTags)
 		}
 	}
 }
@@ -100,26 +77,14 @@ export function metaLoadWithDataLayout(
  * ```
  */
 export function metaLoadWithDataResetLayout(
-	callback: (context: { data: any; route: any; params: any; url: any }) => Metadata
+	callback: (context: { data: any; route: any; params: any; url: any }) => LayoutMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaKey = deriveKeyFromRoute({
-			routeId: route.id,
-			type: 'layout'
-		})
-
 		const metaTags = callback({ data, route, params, url })
-		const cleanedTags = checkData(metaTags)
 
 		return {
 			...data,
-			[metaKey]: {
-				routeId: route.id,
-				layerType: 'layout',
-				params,
-				reset: true,
-				metadata: cleanedTags
-			}
+			...addMetaTagsResetLayout(metaTags)
 		}
 	}
 }
