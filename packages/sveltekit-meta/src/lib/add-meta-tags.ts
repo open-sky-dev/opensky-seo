@@ -1,5 +1,5 @@
-import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
-import { checkData, generateResetData, transformMetadataKeys } from './utils'
+import type { LayoutMetadata, PageMetadata } from './types/metadata';
+import { checkData, generateResetData, transformMetadataKeys } from './utils';
 
 /**
  * Helper function to add page metadata to an existing load function return value.
@@ -24,8 +24,8 @@ import { checkData, generateResetData, transformMetadataKeys } from './utils'
  * ```
  */
 export function addMetaTagsPage(metaTags: PageMetadata) {
-	const cleanedTags = checkData(metaTags)
-	return transformMetadataKeys(cleanedTags)
+	const cleanedTags = checkData(metaTags);
+	return transformMetadataKeys(cleanedTags);
 }
 
 /**
@@ -51,8 +51,8 @@ export function addMetaTagsPage(metaTags: PageMetadata) {
  * ```
  */
 export function addMetaTagsLayout(metaTags: LayoutMetadata) {
-	const cleanedTags = checkData(metaTags)
-	return transformMetadataKeys(cleanedTags)
+	const cleanedTags = checkData(metaTags);
+	return transformMetadataKeys(cleanedTags);
 }
 
 /**
@@ -78,13 +78,13 @@ export function addMetaTagsLayout(metaTags: LayoutMetadata) {
  * ```
  */
 export function addMetaTagsResetLayout(metaTags: LayoutMetadata) {
-	const resetTags = generateResetData()
+	const resetTags = generateResetData();
 
-	const cleanedTags = checkData(metaTags)
-	const setMetaTags = transformMetadataKeys(cleanedTags)
+	const cleanedTags = checkData(metaTags);
+	const setMetaTags = transformMetadataKeys(cleanedTags);
 
 	return {
 		...resetTags,
 		...setMetaTags
-	}
+	};
 }

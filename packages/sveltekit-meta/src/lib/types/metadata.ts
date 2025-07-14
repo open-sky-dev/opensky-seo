@@ -129,4 +129,4 @@ export type PageMetadata = Omit<BaseMetadata, 'titleTemplate'>
 export type TitleTemplate = NonNullable<BaseMetadata['titleTemplate']>
 export type IconOpinionated = NonNullable<BaseMetadata['icon']>
 export type ContentType = NonNullable<BaseMetadata['type']>
-export type Media = NonNullable<BaseMetadata['image'] | BaseMetadata['images']>[number]
+export type Media = NonNullable<BaseMetadata['image']> | NonNullable<BaseMetadata['images']>[number]

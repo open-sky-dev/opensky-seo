@@ -1,6 +1,6 @@
-import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
-import type { Load } from '@sveltejs/kit'
-import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
+import type { LayoutMetadata, PageMetadata } from './types/metadata';
+import type { Load } from '@sveltejs/kit';
+import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags';
 
 /**
  * Creates a page load function that adds metadata to the load data.
@@ -23,8 +23,8 @@ export function metaLoadPage(metaTags: PageMetadata): Load {
 		return {
 			...data,
 			...addMetaTagsPage(metaTags)
-		}
-	}
+		};
+	};
 }
 
 /**
@@ -48,8 +48,8 @@ export function metaLoadLayout(metaTags: LayoutMetadata): Load {
 		return {
 			...data,
 			...addMetaTagsLayout(metaTags)
-		}
-	}
+		};
+	};
 }
 
 /**
@@ -73,6 +73,6 @@ export function metaLoadResetLayout(metaTags: LayoutMetadata): Load {
 		return {
 			...data,
 			...addMetaTagsResetLayout(metaTags)
-		}
-	}
+		};
+	};
 }
