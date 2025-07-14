@@ -1,4 +1,4 @@
-import type { BaseMetadata, LayoutMetadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
 import { metadataSchema } from './types/metadata'
 import { PREFIX } from './index'
 import { z } from 'zod'
@@ -43,7 +43,7 @@ export function generateResetData(): Record<string, null> {
  * // }
  * ```
  */
-export function transformMetadataKeys(data: LayoutMetadata | BaseMetadata): Record<string, any> {
+export function transformMetadataKeys(data: LayoutMetadata | BaseMetadata | PageMetadata): Record<string, any> {
 	const result: Record<string, any> = {}
 
 	for (const [key, value] of Object.entries(data)) {
@@ -78,9 +78,9 @@ export function transformMetadataKeys(data: LayoutMetadata | BaseMetadata): Reco
 	return result
 }
 
-const isTitleTemplate = (key: any, value: any): boolean => {
+const isTitleTemplate = (key: string, value: any): value is { route: string; template: string } => {
 	if (key === 'titleTemplate') {
-		if (typeof value === 'object' && 'route' in value && 'template' in value) {
+		if (typeof value === 'object' && value !== null && 'route' in value && 'template' in value) {
 			return true
 		} else {
 			console.warn('titleTemplate has error. Missing route or template in object')
@@ -117,7 +117,7 @@ const isTitleTemplate = (key: any, value: any): boolean => {
  * // Console warnings for title and description length, and image/images conflict
  * ```
  */
-export function checkData(tags: BaseMetadata | LayoutMetadata): BaseMetadata | LayoutMetadata {
+export function checkData(tags: BaseMetadata | LayoutMetadata | PageMetadata): BaseMetadata | LayoutMetadata | PageMetadata {
 	// Handle character limit on title
 	if (tags.title && tags.title.length > 70) {
 		console.warn('Title exceeds recommended length of 70 characters')

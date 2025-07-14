@@ -1,4 +1,4 @@
-import type { BaseMetadata, LayoutMetadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
 import type { Load } from '@sveltejs/kit'
 import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
@@ -18,7 +18,7 @@ import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './ad
  * });
  * ```
  */
-export function metaLoadPage(metaTags: BaseMetadata): Load {
+export function metaLoadPage(metaTags: PageMetadata): Load {
 	return async ({ data }) => {
 		return {
 			...data,

@@ -1,4 +1,4 @@
-import type { BaseMetadata, LayoutMetadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
 import type { Load } from '@sveltejs/kit'
 import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
@@ -19,7 +19,7 @@ import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './ad
  * ```
  */
 export function metaLoadWithDataPage(
-	callback: (context: { data: any; route: any; params: any; url: any }) => BaseMetadata
+	callback: (context: { data: any; route: any; params: any; url: any }) => PageMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
 		const metaTags = callback({ data, route, params, url })

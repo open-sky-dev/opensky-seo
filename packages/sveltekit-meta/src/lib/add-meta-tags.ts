@@ -1,4 +1,4 @@
-import type { BaseMetadata, LayoutMetadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
 import { checkData, generateResetData, transformMetadataKeys } from './utils'
 
 /**
@@ -23,7 +23,7 @@ import { checkData, generateResetData, transformMetadataKeys } from './utils'
  * }
  * ```
  */
-export function addMetaTagsPage(metaTags: BaseMetadata) {
+export function addMetaTagsPage(metaTags: PageMetadata) {
 	const cleanedTags = checkData(metaTags)
 	return transformMetadataKeys(cleanedTags)
 }
