@@ -113,8 +113,3 @@ type ImageConfig =
 type VideoConfig = {
 	video?: string | Media
 }
-
-export type ParentMetadata = Metadata & {
-	/** Used internally to distinguish inheritance of title template */
-	parentTitleTemplate?: string
-}
