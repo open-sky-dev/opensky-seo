@@ -1,10 +1,10 @@
+import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 import { metaLoadPage, metaLoadLayout, metaLoadResetLayout } from './meta-load'
 import {
 	metaLoadWithDataPage,
 	metaLoadWithDataLayout,
 	metaLoadWithDataResetLayout
 } from './meta-load-with-data'
-import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
 export const PREFIX = '_meta' // This will be prefixed for all metadata added to load data
 

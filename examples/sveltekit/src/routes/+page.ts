@@ -1,6 +1,9 @@
-import { metaLoad } from 'sveltekit-meta';
+import { addMetaTags } from 'sveltekit-meta';
 
-export const load = metaLoad.page({
-	title: 'Home Page',
-	description: 'Welcome to our home page'
-}); 
+export async function load() {
+	return {
+		...addMetaTags.page({
+			title: 'Test from root route'
+		})
+	};
+}

@@ -1,12 +1,10 @@
-import { metaLoad } from 'sveltekit-meta';
+import { addMetaTags } from 'sveltekit-meta';
 
-export const load = metaLoad.layout({
-	title: 'Test Layout',
-	titleTemplate: 'Test - {page}'
-});
-
-// export async function load() {
-// return {
-// 	testLayout: 'test layout'
-// };
-// }
+export async function load() {
+	return {
+		...addMetaTags.layout({
+			title: 'Test from root route',
+			titleTemplate: { route: '/test', template: 'Test Template: {page}' }
+		})
+	};
+}

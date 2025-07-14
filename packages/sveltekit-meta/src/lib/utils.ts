@@ -92,14 +92,18 @@ const isTitleTemplate = (key: any, value: any): boolean => {
 }
 
 /**
- * Validates and cleans metadata tags using Zod schema validation.
+ * Validates and cleans metadata tags by checking character limits and handling mutual exclusivity conflicts.
+ * Also runs Zod validation for additional error checking.
+ *
  * This function performs the following validations:
- * - Validates all metadata against the Zod schema
- * - Provides detailed error messages for invalid data
- * - Handles character limits and format validation automatically
+ * - Warns if title exceeds 70 characters (SEO best practice)
+ * - Warns if description exceeds 200 characters (SEO best practice)
+ * - Resolves conflicts between 'image' and 'images' properties (keeps 'images')
+ * - Resolves conflicts between 'video' and 'videos' properties (keeps 'videos')
+ * - Runs Zod validation for additional error checking
  *
  * @param tags - The metadata object to validate and clean
- * @returns The cleaned and validated metadata object
+ * @returns The cleaned metadata object with conflicts resolved
  *
  * @example
  * ```typescript
@@ -114,14 +118,39 @@ const isTitleTemplate = (key: any, value: any): boolean => {
  * ```
  */
 export function checkData(tags: BaseMetadata | LayoutMetadata): BaseMetadata | LayoutMetadata {
+	// Handle character limit on title
+	if (tags.title && tags.title.length > 70) {
+		console.warn('Title exceeds recommended length of 70 characters')
+	}
+
+	// Handle character limit on description
+	if (tags.description && tags.description.length > 200) {
+		console.warn('Description exceeds recommended length of 200 characters')
+	}
+
+	// Handle mutual exclusivity for image/images
+	if ('image' in tags && 'images' in tags) {
+		console.warn('Both image and images properties specified - using images and ignoring image')
+		// Remove 'image' and keep 'images'
+		const { image, ...restData } = tags
+		tags = restData
+	}
+
+	// Handle mutual exclusivity for video/videos
+	if ('video' in tags && 'videos' in tags) {
+		console.warn('Both video and videos properties specified - using videos and ignoring video')
+		// Remove 'video' and keep 'videos'
+		const { video, ...restData } = tags
+		tags = restData
+	}
+
 	try {
-		// Validate with Zod - this will throw if invalid
-		const validated = metadataSchema.parse(tags)
-		return validated
+		metadataSchema.parse(tags)
 	} catch (error) {
 		if (error instanceof z.ZodError) {
-			console.error('Metadata validation failed:', error.errors)
+			console.warn('Additional validation warnings:', error.issues)
 		}
-		throw error
 	}
+
+	return tags
 }

@@ -1,5 +1,5 @@
 import type { BaseMetadata, LayoutMetadata } from './types/metadata'
-import { checkData, transformMetadataKeys } from './utils'
+import { checkData, generateResetData, transformMetadataKeys } from './utils'
 
 /**
  * Helper function to add page metadata to an existing load function return value.
@@ -78,7 +78,13 @@ export function addMetaTagsLayout(metaTags: LayoutMetadata) {
  * ```
  */
 export function addMetaTagsResetLayout(metaTags: LayoutMetadata) {
-	const cleanedTags = checkData(metaTags)
+	const resetTags = generateResetData()
 
-	return transformMetadataKeys(cleanedTags)
+	const cleanedTags = checkData(metaTags)
+	const setMetaTags = transformMetadataKeys(cleanedTags)
+
+	return {
+		...resetTags,
+		...setMetaTags
+	}
 }
