@@ -1,5 +1,5 @@
-import type { Metadata } from './types/metadata'
-import { deriveKeyFromRoute, checkData } from './utils'
+import type { BaseMetadata, LayoutMetadata } from './types/metadata'
+import { checkData, transformMetadataKeys } from './utils'
 
 /**
  * Helper function to add page metadata to an existing load function return value.
@@ -23,27 +23,9 @@ import { deriveKeyFromRoute, checkData } from './utils'
  * }
  * ```
  */
-export function addMetaTagsPage(
-	context: { route: any; params: any; url: any },
-	metaTags: Metadata
-) {
-	const { route, params, url } = context
-	const metaKey = deriveKeyFromRoute({
-		routeId: route.id,
-		type: 'page'
-	})
-
+export function addMetaTagsPage(metaTags: BaseMetadata) {
 	const cleanedTags = checkData(metaTags)
-
-	return {
-		[metaKey]: {
-			routeId: route.id,
-			layerType: 'page',
-			params,
-			url,
-			metadata: cleanedTags
-		}
-	}
+	return transformMetadataKeys(cleanedTags)
 }
 
 /**
@@ -68,23 +50,9 @@ export function addMetaTagsPage(
  * }
  * ```
  */
-export function addMetaTagsLayout(context: { route: any; params: any }, metaTags: Metadata) {
-	const { route, params } = context
-	const metaKey = deriveKeyFromRoute({
-		routeId: route.id,
-		type: 'layout'
-	})
-
+export function addMetaTagsLayout(metaTags: LayoutMetadata) {
 	const cleanedTags = checkData(metaTags)
-
-	return {
-		[metaKey]: {
-			routeId: route.id,
-			layerType: 'layout',
-			params,
-			metadata: cleanedTags
-		}
-	}
+	return transformMetadataKeys(cleanedTags)
 }
 
 /**
@@ -109,22 +77,8 @@ export function addMetaTagsLayout(context: { route: any; params: any }, metaTags
  * }
  * ```
  */
-export function addMetaTagsResetLayout(context: { route: any; params: any }, metaTags: Metadata) {
-	const { route, params } = context
-	const metaKey = deriveKeyFromRoute({
-		routeId: route.id,
-		type: 'layout'
-	})
-
+export function addMetaTagsResetLayout(metaTags: LayoutMetadata) {
 	const cleanedTags = checkData(metaTags)
 
-	return {
-		[metaKey]: {
-			routeId: route.id,
-			layerType: 'layout',
-			params,
-			reset: true,
-			metadata: cleanedTags
-		}
-	}
+	return transformMetadataKeys(cleanedTags)
 }

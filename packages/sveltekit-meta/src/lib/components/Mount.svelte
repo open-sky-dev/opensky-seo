@@ -2,11 +2,11 @@
   import { page } from "$app/state";
   import { afterNavigate } from "$app/navigation";
 
-  let metaTags = $state(page.data.metaTags);
+  let data = $state(page.data);
+  $inspect(data)
 
+  // Update data on navigation
   afterNavigate(() => {
-    metaTags = page.data.metaTags;
+    data = page.data;
   });
-
-  $inspect(page.data);
 </script>

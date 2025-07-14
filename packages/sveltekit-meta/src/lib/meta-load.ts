@@ -58,6 +58,7 @@ export function metaLoadPage(metaTags: Metadata): Load {
  */
 export function metaLoadLayout(metaTags: Metadata): Load {
 	return async ({ data, route, params }) => {
+		console.log('AA', route.id)
 		const metaKey = deriveKeyFromRoute({
 			routeId: route.id,
 			type: 'layout'

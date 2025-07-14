@@ -45,5 +45,8 @@
     "dist"
   ],
   "svelte": "./dist/index.js",
-  "types": "dist/index.d.ts"
+  "types": "dist/index.d.ts",
+  "dependencies": {
+    "zod": "^4.0.5"
+  }
 }

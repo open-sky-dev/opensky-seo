@@ -4,3 +4,9 @@ export const load = metaLoad.layout({
 	title: 'Test Layout',
 	titleTemplate: 'Test - {page}'
 });
+
+// export async function load() {
+// return {
+// 	testLayout: 'test layout'
+// };
+// }

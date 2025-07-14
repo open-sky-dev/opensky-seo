@@ -6,6 +6,8 @@ import {
 } from './meta-load-with-data'
 import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
+export const PREFIX = '_meta' // This will be prefixed for all metadata added to load data
+
 // Convenience objects for better organization
 export const metaLoad = {
 	page: metaLoadPage,
