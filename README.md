@@ -6,12 +6,12 @@ You define your metadata in `+page.ts` or `+layout.ts` load functions, using our
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { pageMetaLoad } from 'sveltekit-meta';
+import { metaLoadWithData } from "sveltekit-meta";
 
-export const load = pageMetaLoad({
-  title: 'My Amazing Blog Post',
-  description: 'This is a detailed description of my blog post'
-});
+export const load = metaLoadWithData.page(({ params, data }) => ({
+  title: data.post.title,
+  description: "This is a detailed description of my blog post",
+}));
 ```
 
 Ask [ChatGPT Questions](https://chatgpt.com/share/67fc80e9-b368-800d-9689-d0965fae8b86)
@@ -31,6 +31,7 @@ Read [blog post](https://github.com/notnotjake/sveltekit-meta/blob/master/design
   - [Handling Server Data](#handling-server-data)
   - [Debugging](#debugging)
 - [Supported Metadata Properties](#supported-metadata-properties)
+- [Migration Guide](#migration-guide)
 - [License](#license)
 
 ## Features
@@ -58,14 +59,14 @@ npm install sveltekit-meta
 
 ```typescript
 // src/routes/+layout.ts
-import { baseMetaLoad } from 'sveltekit-meta';
+import { metaLoad } from "sveltekit-meta";
 
-export const load = baseMetaLoad({
-  sitename: 'My SvelteKit App',
-  title: 'Welcome',
-  titleTemplate: 'My SvelteKit App - {page}',
-  description: 'A fantastic SvelteKit application',
-  icon: './favicon.png'
+export const load = metaLoad.layout({
+  sitename: "My SvelteKit App",
+  title: "Welcome",
+  titleTemplate: "My SvelteKit App - {page}",
+  description: "A fantastic SvelteKit application",
+  icon: "./favicon.png",
 });
 ```
 
@@ -75,7 +76,7 @@ export const load = baseMetaLoad({
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
   import { MetaTags } from 'sveltekit-meta';
-  
+
   let { children } = $props();
 </script>
 
@@ -88,23 +89,23 @@ export const load = baseMetaLoad({
 
 ```typescript
 // src/routes/blog/+layout.ts
-import { layoutMetaLoad } from 'sveltekit-meta';
+import { metaLoad } from "sveltekit-meta";
 
-export const load = layoutMetaLoad({
-  title: 'Blog',
-  titleTemplate: 'Svelte Blog - {page}',
-  description: 'Read our latest articles and updates'
+export const load = metaLoad.layout({
+  title: "Blog",
+  titleTemplate: "Svelte Blog - {page}",
+  description: "Read our latest articles and updates",
 });
 ```
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { pageMetaLoad } from 'sveltekit-meta';
+import { metaLoadWithData } from "sveltekit-meta";
 
-export const load = pageMetaLoad({
-  title: 'My Amazing Blog Post',
-  description: 'This is a detailed description of my blog post'
-});
+export const load = metaLoadWithData.page(({ params, data }) => ({
+  title: data.post.title,
+  description: "This is a detailed description of my blog post",
+}));
 ```
 
 And that's it! Your meta tags will be automatically generated and updated across your site.
@@ -119,7 +120,7 @@ SvelteKit Meta uses a data cascade pattern to efficiently manage metadata:
 2. **Layout Metadata**: Each layout can extend or override parent metadata. Unlike other tools, you can have many layers of layout metadata set.
 3. **Page Metadata**: Pages can further customize metadata for specific routes
 
-Metadata flows down through your application's routing hierarchy, with lower levels being able to selectively override higher-level values. 
+Metadata flows down through your application's routing hierarchy, with lower levels being able to selectively override higher-level values.
 
 The provided helpers for writing the load functions take care of passing parent data and data from any `+page.server.ts` load functions down to the page. Other packages will lose the data from page server load functions, but using these helpers ensures that the page receives everything from the data cascade.
 
@@ -127,80 +128,102 @@ The provided helpers for writing the load functions take care of passing parent 
 
 SvelteKit Meta provides several helper functions to simplify integration. You still have to create `+page.ts` and `+layout.ts` files but these make it simpler to define your meta tags with minimal boilerplate code
 
-#### `baseMetaLoad(metaTags)`
+#### `metaLoad` - Static Metadata
 
-Creates a load function for your root layout that establishes the base metadata for your site.
+Use these functions when you have metadata that doesn't depend on route parameters or server data.
 
-#### `layoutMetaLoad(metaTags)`
+- **`metaLoad.page(metaTags)`** - Creates a page load function with static metadata
+- **`metaLoad.layout(metaTags)`** - Creates a layout load function with static metadata
+- **`metaLoad.resetLayout(metaTags)`** - Creates a reset layout load function with static metadata
 
-Creates a load function for layout files that merges new metadata with parent metadata.
+#### `metaLoadWithData` - Dynamic Metadata
 
-#### `pageMetaLoad(metaTags)`
+Use these functions when you need to access route parameters, server data, or other context to generate metadata.
 
-Creates a load function for page files that merges new metadata with parent metadata.
+- **`metaLoadWithData.page(callback)`** - Creates a page load function with dynamic metadata
+- **`metaLoadWithData.layout(callback)`** - Creates a layout load function with dynamic metadata
+- **`metaLoadWithData.resetLayout(callback)`** - Creates a reset layout load function with dynamic metadata
 
-#### `advancedMetaLoad(callback)`
+#### `addMetaTags` - Manual Integration
 
-For more complex scenarios where you need access to the full SvelteKit load event and parent tags.
+Use these functions when you want full control over your load function but still want to add metadata.
 
-#### `parseMeta(parentTags, setTags)`
-
-If you don't want to use these helpers you can use parseMeta directly. You can use it by spreading its output onto your return. Directly merge parent metadata with new metadata (used internally by the other helpers). 
-
-If you use this you must deal with the `parent` and `data` properties from your load functions LoadEvent argument or else data from `+page.server.ts` load function will be lost.
+- **`addMetaTags.page(metaTags)`** - Adds page metadata to load function return value
+- **`addMetaTags.layout(metaTags)`** - Adds layout metadata to load function return value
+- **`addMetaTags.resetLayout(metaTags)`** - Adds reset layout metadata to load function return value
 
 ## Advanced Usage
 
 ### Accessing Route Parameters
 
-In most cases, instead of defining your load function and dealing with inherited data, you can use the advancedMetaLoad helper function as it allows you to write code to run as a callback just like a normal load function, except that we deal with adding back the inherited data.
-
-For dynamic routes, you can use the advanced load helper to incorporate route parameters:
+For dynamic routes, you can use the `metaLoadWithData` helper to incorporate route parameters:
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import type { PageLoad } from './$types';
-import MetaTags from 'sveltekit-meta';
+import { metaLoadWithData } from "sveltekit-meta";
 
-export const load: PageLoad = MetaTags.advancedMetaLoad(async ({ event, parentTags }) => {
-  const { slug } = event.params;
-  
+export const load = metaLoadWithData.page(({ params, data }) => {
+  const { slug } = params;
+
   // Fetch article data based on slug
   const article = await getArticleBySlug(slug);
-  
+
   return {
-	article,
-	...MetaTags.parseMeta(parentTags, {
-	  title: article.title,
-	  description: article.excerpt,
-	  image: article.featuredImage
-	})
+    title: article.title,
+    description: article.excerpt,
+    image: article.featuredImage,
   };
 });
 ```
 
 ### Handling Server Data
 
-The `advancedMetaLoad` helper automatically merges parent data, server data, and your callback's result:
+The `metaLoadWithData` helper automatically merges parent data, server data, and your callback's result:
 
 ```typescript
 // +page.server.ts
 export async function load() {
   return {
-	serverData: await fetchSomeData()
+    serverData: await fetchSomeData(),
   };
 }
 
 // +page.ts
-export const load = MetaTags.advancedMetaLoad(async ({ event, parentTags }) => {
+export const load = metaLoadWithData.page(({ data }) => {
   // serverData is automatically available in your page component
   return {
-	...MetaTags.parseMeta(parentTags, {
-	  title: 'Page with Server Data'
-	}),
-	clientSideData: processClientData()
+    title: "Page with Server Data",
+    description: data.serverData.description,
   };
 });
+```
+
+### Manual Integration
+
+If you need full control over your load function, you can use the `addMetaTags` helpers:
+
+```typescript
+// +page.ts
+export async function load({ data, route, params, url }) {
+  const post = await fetchPost(params.slug);
+
+  return {
+    ...data,
+    post,
+    ...addMetaTags.page({ title: post.title }),
+  };
+}
+
+// +layout.ts
+export async function load({ data, route, params }) {
+  const section = await fetchSection();
+
+  return {
+    ...data,
+    section,
+    ...addMetaTags.layout({ title: section.title }),
+  };
+}
 ```
 
 ### Debugging
@@ -208,37 +231,76 @@ export const load = MetaTags.advancedMetaLoad(async ({ event, parentTags }) => {
 Enable debug mode to see detailed logs during development:
 
 ```typescript
-import MetaTags, { enableDebug } from 'sveltekit-meta';
+import { enableDebug } from "sveltekit-meta";
 
 // Enable debug logs (disable in production)
 enableDebug(import.meta.env.DEV);
+```
+
+## Migration Guide
+
+If you're upgrading from v0.0.1, here's how to migrate your code:
+
+### Before (v0.0.1)
+
+```typescript
+// Root layout
+export const load = baseMetaLoad({
+  title: "My Site",
+  description: "Welcome",
+});
+
+// Page with dynamic data
+export const load = advancedMetaLoad(async ({ event, parentTags }) => {
+  const post = await fetchPost(event.params.slug);
+  return {
+    post,
+    ...parseMeta(parentTags, { title: post.title }),
+  };
+});
+```
+
+### After (v1.0.0)
+
+```typescript
+// Root layout
+export const load = metaLoad.layout({
+  title: "My Site",
+  description: "Welcome",
+});
+
+// Page with dynamic data
+export const load = metaLoadWithData.page(({ params, data }) => ({
+  title: data.post.title,
+  description: data.post.description,
+}));
 ```
 
 ## Supported Metadata Properties
 
 SvelteKit Meta supports a comprehensive range of metadata properties:
 
-| Property | Description |
-|----------|-------------|
-| `canonical` | Canonical URL for the page (og:url, link:rel:canonical) |
-| `icon` | Favicon path as string or IconOpinionated object |
-| `maskIcon` | Object with `url` (svg file) and optional `color` (hex) for Safari Pinned Tabs |
-| `theme` | Theme color for browser UI elements (string or `{ light, dark }` object) |
-| `colorScheme` | Color scheme preference for the page (meta:color-scheme) |
-| `sitename` | Name of the website (og:sitename) |
-| `title` | Page title (warns if > 70 characters) (og:title, meta:title) |
-| `titleTemplate` | Template for constructing child page titles (e.g., "Reviews - {page}") |
-| `description` | Page description (warns if > 200 characters) (og:description, twitter:description) |
-| `author` | Content author(s) as string or array (meta:author, og:author) |
-| `twitterSite` | The X Account for the publishing site (twitter:site) |
-| `twitterCreator` | The X Account for the author/creator of this page (twitter:creator) |
-| `date` | Publication date in ISO 8601 format (og meta) |
-| `modified` | Last modified date (og:modified-time, meta:modified, meta:last-modified) |
-| `type` | Content type configuration (`basic`, `article`, `largeImage`, `player` or ContentTypeAdvanced) |
-| `image` | Primary image for social sharing (string or Media object) |
-| `images` | Multiple images for social sharing (array of Media objects) |
-| `video` | Primary video for social sharing (string or Media object) |
-| `videos` | Multiple videos for social sharing (array of Media objects) |
+| Property         | Description                                                                                    |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `canonical`      | Canonical URL for the page (og:url, link:rel:canonical)                                        |
+| `icon`           | Favicon path as string or IconOpinionated object                                               |
+| `maskIcon`       | Object with `url` (svg file) and optional `color` (hex) for Safari Pinned Tabs                 |
+| `theme`          | Theme color for browser UI elements (string or `{ light, dark }` object)                       |
+| `colorScheme`    | Color scheme preference for the page (meta:color-scheme)                                       |
+| `sitename`       | Name of the website (og:sitename)                                                              |
+| `title`          | Page title (warns if > 70 characters) (og:title, meta:title)                                   |
+| `titleTemplate`  | Template for constructing child page titles (e.g., "Reviews - {page}")                         |
+| `description`    | Page description (warns if > 200 characters) (og:description, twitter:description)             |
+| `author`         | Content author(s) as string or array (meta:author, og:author)                                  |
+| `twitterSite`    | The X Account for the publishing site (twitter:site)                                           |
+| `twitterCreator` | The X Account for the author/creator of this page (twitter:creator)                            |
+| `date`           | Publication date in ISO 8601 format (og meta)                                                  |
+| `modified`       | Last modified date (og:modified-time, meta:modified, meta:last-modified)                       |
+| `type`           | Content type configuration (`basic`, `article`, `largeImage`, `player` or ContentTypeAdvanced) |
+| `image`          | Primary image for social sharing (string or Media object)                                      |
+| `images`         | Multiple images for social sharing (array of Media objects)                                    |
+| `video`          | Primary video for social sharing (string or Media object)                                      |
+| `videos`         | Multiple videos for social sharing (array of Media objects)                                    |
 
 ### Media Object Structure
 
@@ -246,13 +308,13 @@ Media objects for images and videos can include:
 
 ```typescript
 type Media = {
-  url: string;           // Primary URL for the media resource
-  secureUrl?: string;    // HTTPS URL for the media resource
-  type?: string;         // MIME type of the media
-  width?: number;        // Width in pixels
-  height?: number;       // Height in pixels
-  alt?: string;          // Alt text description
-}
+  url: string; // Primary URL for the media resource
+  secureUrl?: string; // HTTPS URL for the media resource
+  type?: string; // MIME type of the media
+  width?: number; // Width in pixels
+  height?: number; // Height in pixels
+  alt?: string; // Alt text description
+};
 ```
 
 ### Icon Configuration
@@ -263,16 +325,16 @@ Icons can be configured with more advanced options:
 type IconOpinionated = {
   svg?: string;
   small?: {
-	url: string;
-	size: number;
-	type?: string;
+    url: string;
+    size: number;
+    type?: string;
   };
   large?: {
-	url: string;
-	size: number;
-	type?: string;
+    url: string;
+    size: number;
+    type?: string;
   };
-}
+};
 ```
 
 ### Content Type Configuration
@@ -281,9 +343,9 @@ Content type can be configured with advanced options for different platforms:
 
 ```typescript
 type ContentTypeAdvanced = {
-  twitter: 'summary' | 'largeImage' | 'player';
-  og: 'website' | 'article';
-}
+  twitter: "summary" | "largeImage" | "player";
+  og: "website" | "article";
+};
 ```
 
 > Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. The library will warn and use the plural version if both are specified.
