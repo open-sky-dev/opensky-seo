@@ -43,7 +43,9 @@ export function generateResetData(): Record<string, null> {
  * // }
  * ```
  */
-export function transformMetadataKeys(data: LayoutMetadata | BaseMetadata | PageMetadata): Record<string, any> {
+export function transformMetadataKeys(
+	data: LayoutMetadata | BaseMetadata | PageMetadata
+): Record<string, any> {
 	const result: Record<string, any> = {}
 
 	for (const [key, value] of Object.entries(data)) {
@@ -67,7 +69,9 @@ export function transformMetadataKeys(data: LayoutMetadata | BaseMetadata | Page
 					.toLowerCase() // Convert to lowercase for consistency
 			}
 
-			result[`${PREFIX}_${routeKey}-title-template`] = value.template
+			const templateKey = `${PREFIX}_${routeKey}-title-template`
+			result[templateKey] = value.template
+
 			continue
 		}
 
@@ -117,7 +121,9 @@ const isTitleTemplate = (key: string, value: any): value is { route: string; tem
  * // Console warnings for title and description length, and image/images conflict
  * ```
  */
-export function checkData(tags: BaseMetadata | LayoutMetadata | PageMetadata): BaseMetadata | LayoutMetadata | PageMetadata {
+export function checkData(
+	tags: BaseMetadata | LayoutMetadata | PageMetadata
+): BaseMetadata | LayoutMetadata | PageMetadata {
 	// Handle character limit on title
 	if (tags.title && tags.title.length > 70) {
 		console.warn('Title exceeds recommended length of 70 characters')

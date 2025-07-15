@@ -3,7 +3,12 @@
 	import { afterNavigate } from '$app/navigation'
 
 	let data = $state(page.data)
-	$inspect(data)
+	
+	let { debug } = $props()
+	
+	if (debug) {
+		$inspect(data)
+	}
 
 	// Update data on navigation
 	afterNavigate(() => {
@@ -17,15 +22,22 @@
 
 	// Get all title template keys
 	const titleTemplateKeys = $derived.by(() => {
-		return Object.keys(data).filter((key: string) => key.endsWith('-title-template'))
+		const keys = Object.keys(data).filter((key: string) => key.endsWith('-title-template'))
+		if (debug) { console.log('🔍 [Mount] Found title template keys:', keys) }
+		return keys
 	})
 
 	// Get current route path
-	const currentRoute = $derived.by(() => page.url.pathname)
+	const currentRoute = $derived.by(() => {
+		const route = page.url.pathname
+		return route
+	})
 
 	// Find the appropriate title template based on route depth
 	const activeTitleTemplate = $derived.by(() => {
-		if (titleTemplateKeys.length === 0) return null
+		if (titleTemplateKeys.length === 0) {
+			return null
+		}
 
 		// Sort title templates by depth (root first, then by path length)
 		const sortedTemplates = titleTemplateKeys
@@ -36,18 +48,27 @@
 			})
 			.sort((a: any, b: any) => a.depth - b.depth)
 
+		if (debug) { console.log('🔍 [Mount] Sorted title templates:', sortedTemplates) }
+
 		// Find the best matching template for current route
 		for (const template of sortedTemplates) {
 			if (template.route === 'root') {
-				// Root template always applies
-				return template
+				// Don't return root immediately, check for more specific matches first
+				continue
 			}
 
 			// Check if current route starts with this template's route
 			const templateRoute = '/' + template.route.replace(/_/g, '/')
+
 			if (currentRoute.startsWith(templateRoute)) {
 				return template
 			}
+		}
+
+		// If no specific match found, check for root template
+		const rootTemplate = sortedTemplates.find((t) => t.route === 'root')
+		if (rootTemplate) {
+			return rootTemplate
 		}
 
 		return null
@@ -56,15 +77,18 @@
 	// Get the title from the current route level
 	const currentTitle = $derived.by(() => {
 		const titleKey = '_meta-title'
-		return data[titleKey] || null
+		const title = data[titleKey] || null
+		return title
 	})
 
 	// Combine title template with current title
 	const combinedTitle = $derived.by(() => {
 		if (activeTitleTemplate && currentTitle) {
-			return activeTitleTemplate.template.replace('{page}', currentTitle)
+			const result = activeTitleTemplate.template.replace('{page}', currentTitle)
+			return result
+		} else {
+			return currentTitle
 		}
-		return currentTitle
 	})
 
 	// Helper function to get metadata value

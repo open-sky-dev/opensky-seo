@@ -11,6 +11,10 @@
 	"dependencies": {
 		"zod": "^4.0.5"
 	},
+	"peerDependencies": {
+		"@sveltejs/kit": "^2.0.0",
+		"svelte": "^5.0.0"
+	},
 	"devDependencies": {
 		"@eslint/compat": "^1.2.5",
 		"@eslint/js": "^9.18.0",
@@ -54,10 +58,6 @@
 		"svelte-meta",
 		"svelte-seo"
 	],
-	"peerDependencies": {
-		"@sveltejs/kit": "^2.0.0",
-		"svelte": "^5.0.0"
-	},
 	"private": false,
 	"scripts": {
 		"build": "vite build && npm run prepack",
