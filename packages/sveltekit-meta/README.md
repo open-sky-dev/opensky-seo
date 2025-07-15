@@ -110,13 +110,14 @@ And that's it! Your meta tags will be automatically generated and updated across
 
 SvelteKit Meta uses a data cascade pattern to efficiently manage metadata:
 
-1. **Base Metadata**: Set at the root layout level or anywhere else in the project to override and start fresh.
-2. **Layout Metadata**: Each layout can extend or override parent metadata. Unlike other tools, you can have many layers of layout metadata set.
-3. **Page Metadata**: Pages can further customize metadata for specific routes
+1. **Layout Metadata**: Each layout can extend or override parent metadata. Unlike other tools, you can have many layers of layout metadata set.
+2. **Page Metadata**: Pages can further customize metadata for specific routes, overwriting and extending data inherited from layouts above the page in route tree.
 
-Metadata flows down through your application's routing hierarchy, with lower levels being able to selectively override higher-level values.
+Metadata flows down through your application's routing hierarchy inheriting any data above, with lower levels being able to selectively override higher-level values.
 
 The provided helpers for writing the load functions take care of passing parent data and data from any `+page.server.ts` load functions down to the page. Other packages will lose the data from page server load functions, but using these helpers ensures that the page receives everything from the data cascade.
+
+Titles are handled specially to allow you to set a title template and for that to work in a correct fashion.
 
 ### Available Helpers
 
@@ -146,11 +147,35 @@ Use these functions when you want full control over your load function but still
 - **`addMetaTags.layout(metaTags)`** - Adds layout metadata to load function return value
 - **`addMetaTags.resetLayout(metaTags)`** - Adds reset layout metadata to load function return value
 
+## Title Templates
+
+Title templates allow you to define a pattern for constructing page titles. You are required to specify the route where the template is located. This allows us to evaluate multiple layers of title templates and decide which should be used.
+
+To understand this concern, consider the following: you have a `/staff` route with `/staff/+layout.ts` and `/staff/+page.ts` files and you also have `/staff/jeff` route. When you visit /staff you want to use the title from staff layout and the template from the higher layout, in this case root. But you also want a template to be defined in staff/layout which would be applied at /staff/jeff. The issue is that if you set a titleTemplate at staff/layout it will override the root layout's titleTemplate and so visiting /staff will use the titleTemplate from /staff/layout. Instead of "Site - Staff" using root template, it would be "Staff - Staff" using the staff layout template. By specifying route in the title template, we are able to determine which should be used based on the route being loaded.
+
+```typescript
+// Root layout - applies to all pages under /
+export const load = metaLoad.layout({
+  titleTemplate: { route: "/", template: "My Site - {page}" },
+});
+
+// Blog layout - applies to all pages under /blog
+export const load = metaLoad.layout({
+  titleTemplate: { route: "/blog", template: "Blog - {page}" },
+});
+
+// Individual page - will use the most specific template
+export const load = metaLoad.page({
+  title: "My Amazing Post",
+});
+// Result: "Blog - My Amazing Post" (uses /blog template)
+```
+
 ## Advanced Usage
 
 ### Accessing Route Parameters
 
-For dynamic routes, you can use the `metaLoadWithData` helper to incorporate route parameters:
+For dynamic metadata, you can use the `metaLoadWithData` helper to incorporate route parameters:
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
@@ -166,28 +191,6 @@ export const load = metaLoadWithData.page(({ params, data }) => {
     title: article.title,
     description: article.excerpt,
     image: article.featuredImage,
-  };
-});
-```
-
-### Handling Server Data
-
-The `metaLoadWithData` helper automatically merges parent data, server data, and your callback's result:
-
-```typescript
-// +page.server.ts
-export async function load() {
-  return {
-    serverData: await fetchSomeData(),
-  };
-}
-
-// +page.ts
-export const load = metaLoadWithData.page(({ data }) => {
-  // serverData is automatically available in your page component
-  return {
-    title: "Page with Server Data",
-    description: data.serverData.description,
   };
 });
 ```
@@ -216,6 +219,24 @@ export async function load({ data, route, params }) {
     ...data,
     section,
     ...addMetaTags.layout({ title: section.title }),
+  };
+}
+```
+
+### Handling Server Data
+
+The `metaLoadWithData` and `metaLoad` helpers automatically merge parent data, server data, and your meta data. If you are using addMetaTags, it is important that you handle this otherwise server data will not reach the page.
+
+You must take in `data` as a destructured argument in your load function and spread it on the return value 
+
+```typescript
+// +page.ts
+export async function load({ data }) {
+                          /* ^ include data */
+  return {
+    ...data,
+    /* ^ include data */
+    ...addMetaTags.page({ title: post.title }),
   };
 }
 ```
