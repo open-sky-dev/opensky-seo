@@ -1,7 +1,8 @@
 {
 	"author": "notnotjake",
-	"description": "SvelteKit metadata utilities",
 	"name": "sveltekit-meta",
+	"description": "SvelteKit metadata utilities",
+	"version": "1.0.0",
 	"repository": {
 		"directory": "packages/sveltekit-meta",
 		"type": "git",
@@ -75,6 +76,5 @@
 	],
 	"svelte": "./dist/index.js",
 	"type": "module",
-	"types": "./dist/index.d.ts",
-	"version": "1.0.0"
+	"types": "./dist/index.d.ts"
 }
