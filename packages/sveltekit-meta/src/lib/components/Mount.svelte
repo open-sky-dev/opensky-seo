@@ -3,18 +3,11 @@
 	import { afterNavigate } from '$app/navigation'
 
 	let data = $state(page.data)
+	afterNavigate(() => { data = page.data }) // Update data after navigation
 	
 	let { debug } = $props()
+	if (debug) { $inspect(data) }
 	
-	if (debug) {
-		$inspect(data)
-	}
-
-	// Update data on navigation
-	afterNavigate(() => {
-		data = page.data
-	})
-
 	// Get all metadata keys from page data
 	const metaKeys = $derived.by(() => {
 		return Object.keys(data).filter((key: string) => key.startsWith('_meta-'))
