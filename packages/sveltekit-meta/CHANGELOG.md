@@ -4,15 +4,31 @@
 
 ### Breaking Changes
 
-This is a major refactor of the SvelteKit Meta API to provide better modularity and clearer separation of concerns.
+This is a major refactor of the SvelteKit Meta API to remove `await parent` from load functions, allowing for asynchronous/parallel execution of load functions by SvelteKit. It also introduces a new API designed to be more consistent and easier to use.
 
 #### API Restructure
 
 - **Removed**: `baseMetaLoad`, `layoutMetaLoad`, `pageMetaLoad`, `advancedMetaLoad`, `parseMeta` functions
-- **Added**: New modular API with three main categories:
-  - `metaLoad` - For static metadata (no access to load context)
-  - `metaLoadWithData` - For dynamic metadata (with access to load context)
-  - `addMetaTags` - For manual integration with existing load functions
+- **Added**: New modular API with three main categories, each providing `page`, `layout`, and `resetLayout` methods:
+  - `metaLoad` - Quickest way to add meta tags. Allows for static metadata (no access to load context)
+  - `metaLoadWithData` - Allows for dynamic metadata with access to load context
+  - `addMetaTags` - For manual integration with existing load functions. Internally, this is what metaLoad and metaLoadWithData call
+
+#### Data Structure Changes
+
+All metadata is now added to the top level of loaded data with the `_meta` prefix (e.g., `_metaTitle`, `_metaDescription`). This should prevent any existing data from conflicting with the metadata. Switching to this approach allows SvelteKit to merge data down the routing tree automatically.
+
+#### Title Template Changes
+
+Because of these changes the `titleTemplate` property now requires you to explicitly specify the route where the template should apply. This is necessary to achieve the features we think necessary as well as avoiding awaiting parent data:
+
+```typescript
+// Before (v0.0.1)
+titleTemplate: 'My Site - {page}'
+
+// After (v1.0.0)
+titleTemplate: { route: '/', template: 'My Site - {page}' }
+```
 
 #### Migration Guide
 
@@ -57,7 +73,7 @@ export const load = metaLoadWithData.page(({ params, data }) => ({
 - **Better Type Safety**: Improved TypeScript support throughout
 - **Reduced Boilerplate**: Less code needed for common use cases
 - **Consistent Patterns**: All functions follow the same pattern for easier learning
-- **Automatic Data Handling**: No need to manually handle parent data or server data merging
+- **Parallel Execution**: Removed `await parent` to allow SvelteKit's parallel load function execution
 
 ### Features
 
