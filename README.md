@@ -8,15 +8,11 @@ You define your metadata in `+page.ts` or `+layout.ts` load functions, using our
 // src/routes/blog/[slug]/+page.ts
 import { metaLoadWithData } from "sveltekit-meta";
 
-export const load = metaLoadWithData.page(({ params, data }) => ({
+export const load = metaLoadWithData.page(({ data }) => ({
   title: data.post.title,
   description: "This is a detailed description of my blog post",
 }));
 ```
-
-Ask [ChatGPT Questions](https://chatgpt.com/share/67fc80e9-b368-800d-9689-d0965fae8b86)
-
-Read [blog post](https://github.com/notnotjake/sveltekit-meta/blob/master/design.md)
 
 ## Table of Contents
 
@@ -29,19 +25,17 @@ Read [blog post](https://github.com/notnotjake/sveltekit-meta/blob/master/design
 - [Advanced Usage](#advanced-usage)
   - [Accessing Route Parameters](#accessing-route-parameters)
   - [Handling Server Data](#handling-server-data)
-  - [Debugging](#debugging)
 - [Supported Metadata Properties](#supported-metadata-properties)
-- [Migration Guide](#migration-guide)
 - [License](#license)
 
 ## Features
 
 - **Data Cascade**: Define meta tags at the root level and override selectively at deeper levels
-- **Simple API**: Straightforward helper functions for common load function patterns
-- **Type Safe**: Fully typed with TypeScript for better developer experience
+- **Simple API**: Straightforward helper functions to reduce boiler plate code
+- **Type Safe**: Fully typed to make adding tags easier
 - **Flexible Integration**: Works with SvelteKit's layout and page structure
-- **Performance Optimized**: Minimal runtime overhead
-- **SEO-friendly warnings**: Fully supports server-side rendering! Plus built in warnings for meta tag issues
+- **Performance Optimized**: Works with SvelteKit parallel execution of load functions
+- **SEO-friendly**: Fully supports server-side rendering
 
 ## Installation
 
@@ -102,7 +96,7 @@ export const load = metaLoad.layout({
 // src/routes/blog/[slug]/+page.ts
 import { metaLoadWithData } from "sveltekit-meta";
 
-export const load = metaLoadWithData.page(({ params, data }) => ({
+export const load = metaLoadWithData.page(({ data }) => ({
   title: data.post.title,
   description: "This is a detailed description of my blog post",
 }));
@@ -224,56 +218,6 @@ export async function load({ data, route, params }) {
     ...addMetaTags.layout({ title: section.title }),
   };
 }
-```
-
-### Debugging
-
-Enable debug mode to see detailed logs during development:
-
-```typescript
-import { enableDebug } from "sveltekit-meta";
-
-// Enable debug logs (disable in production)
-enableDebug(import.meta.env.DEV);
-```
-
-## Migration Guide
-
-If you're upgrading from v0.0.1, here's how to migrate your code:
-
-### Before (v0.0.1)
-
-```typescript
-// Root layout
-export const load = baseMetaLoad({
-  title: "My Site",
-  description: "Welcome",
-});
-
-// Page with dynamic data
-export const load = advancedMetaLoad(async ({ event, parentTags }) => {
-  const post = await fetchPost(event.params.slug);
-  return {
-    post,
-    ...parseMeta(parentTags, { title: post.title }),
-  };
-});
-```
-
-### After (v1.0.0)
-
-```typescript
-// Root layout
-export const load = metaLoad.layout({
-  title: "My Site",
-  description: "Welcome",
-});
-
-// Page with dynamic data
-export const load = metaLoadWithData.page(({ params, data }) => ({
-  title: data.post.title,
-  description: data.post.description,
-}));
 ```
 
 ## Supported Metadata Properties
