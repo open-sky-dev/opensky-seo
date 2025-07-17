@@ -1,12 +1,12 @@
 {
 	"author": "notnotjake",
-	"name": "sveltekit-meta",
-	"description": "SvelteKit metadata utilities",
+	"name": "@opensky/seo",
+	"description": "SvelteKit meta tags and seo utility",
 	"version": "1.0.0",
 	"repository": {
-		"directory": "packages/sveltekit-meta",
+		"directory": "packages/seo",
 		"type": "git",
-		"url": "git+https://github.com/notnotjake/sveltekit-meta.git"
+		"url": "https://github.com/open-sky-dev/opensky-seo.git"
 	},
 	"license": "MIT",
 	"dependencies": {
