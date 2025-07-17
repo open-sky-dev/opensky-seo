@@ -1,18 +1,23 @@
-# SvelteKit Meta
+# opensky/seo
 
 A powerful, lightweight solution for managing meta tags in SvelteKit applications with intelligent data cascading.
 
 You define your metadata in `+page.ts` or `+layout.ts` load functions, using our helper functions for simpler code - like so:
 
 ```typescript
-// src/routes/blog/[slug]/+page.ts
-import { metaLoadWithData } from "sveltekit-meta";
+// src/routes/+layout.ts
+import { metaLoad } from "@opensky/seo";
 
-export const load = metaLoadWithData.page(({ data }) => ({
-  title: data.post.title,
-  description: "This is a detailed description of my blog post",
-}));
+export const load = metaLoad.layout({
+  sitename: "My Awesome Site",
+  title: "Home",
+  titleTemplate: "My Awesome Site - {page}",
+  description: "A fantastic SvelteKit application",
+  icon: "./favicon.png",
+});
 ```
+
+Congrats! You now have seo meta tags for your entire site. Customizing meta tags from here on is easy
 
 ## Table of Contents
 
@@ -40,11 +45,9 @@ export const load = metaLoadWithData.page(({ data }) => ({
 ## Installation
 
 ```bash
-bun add sveltekit-meta
+bun add @opensky/seo
 # or
-pnpm add sveltekit-meta
-# or
-npm install sveltekit-meta
+npm install @opensky/seo
 ```
 
 ## Quick Start
@@ -53,7 +56,7 @@ npm install sveltekit-meta
 
 ```typescript
 // src/routes/+layout.ts
-import { metaLoad } from "sveltekit-meta";
+import { metaLoad } from "@opensky/seo";
 
 export const load = metaLoad.layout({
   sitename: "My SvelteKit App",
@@ -69,7 +72,7 @@ export const load = metaLoad.layout({
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-  import { MetaTags } from 'sveltekit-meta';
+  import { MetaTags } from '@opensky/seo';
 
   let { children } = $props();
 </script>
@@ -83,7 +86,7 @@ export const load = metaLoad.layout({
 
 ```typescript
 // src/routes/blog/+layout.ts
-import { metaLoad } from "sveltekit-meta";
+import { metaLoad } from "@opensky/seo";
 
 export const load = metaLoad.layout({
   title: "Blog",
@@ -94,7 +97,7 @@ export const load = metaLoad.layout({
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { metaLoadWithData } from "sveltekit-meta";
+import { metaLoadWithData } from "@opensky/seo";
 
 export const load = metaLoadWithData.page(({ data }) => ({
   title: data.post.title,
@@ -179,7 +182,7 @@ For dynamic metadata, you can use the `metaLoadWithData` helper to incorporate r
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { metaLoadWithData } from "sveltekit-meta";
+import { metaLoadWithData } from "@opensky/seo";
 
 export const load = metaLoadWithData.page(({ params, data }) => {
   const { slug } = params;
