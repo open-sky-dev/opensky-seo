@@ -9,6 +9,9 @@
 		"url": "https://github.com/open-sky-dev/opensky-seo.git"
 	},
 	"license": "MIT",
+	"publishConfig": {
+		"access": "public"
+	},
 	"dependencies": {
 		"zod": "^4.0.5"
 	},
