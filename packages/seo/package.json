@@ -2,7 +2,7 @@
 	"author": "notnotjake",
 	"name": "@opensky/seo",
 	"description": "SvelteKit meta tags and seo utility",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"repository": {
 		"directory": "packages/seo",
 		"type": "git",
