@@ -114,7 +114,7 @@ export const addMetaTags = {
 	resetLayout: addMetaTagsResetLayout
 } as const
 
-export { default as MetaTags } from './components/Mount.svelte'
+export { default as SeoTags } from './components/Mount.svelte'
 
 export * from './types/metadata'
 
