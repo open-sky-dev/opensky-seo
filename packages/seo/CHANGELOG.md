@@ -42,7 +42,19 @@ Title templates are now stored in load data keyed by their route **verbatim** (e
 
 - The undocumented `additionalTags` pass-through in the head component. Use Svelte's native `<svelte:head>` for arbitrary extra tags — it composes with `SeoTags`.
 
-## [1.0.0] - 2024-12-19
+## [1.1.0] - 2025-07-28
+
+### Changed
+
+- **BREAKING**: Renamed the mount component export from `MetaTags` to `SeoTags`, in line with the package's rename from meta to seo.
+
+## [1.0.1] - 2025-07-19
+
+### Fixed
+
+- npm packaging fixes: corrected the package privacy setting and updated the repository metadata after the move to open-sky-dev/opensky-seo.
+
+## [1.0.0] - 2025-07-17
 
 ### Breaking Changes
 
