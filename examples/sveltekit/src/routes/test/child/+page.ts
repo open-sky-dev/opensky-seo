@@ -1,4 +1,4 @@
-import { addMetaTags } from 'sveltekit-meta';
+import { addMetaTags } from '@opensky/seo';
 
 export async function load() {
 	return {

@@ -1,9 +1,9 @@
 <script lang="ts">
 	import '../app.css';
-	import { MetaTags } from 'sveltekit-meta';
+	import { SeoTags } from '@opensky/seo';
 
 	let { children } = $props();
 </script>
 
-<MetaTags />
+<SeoTags />
 {@render children()}

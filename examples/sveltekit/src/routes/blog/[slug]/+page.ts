@@ -1,5 +1,5 @@
 import type { PageLoad } from './$types';
-import { metaLoadWithData } from 'sveltekit-meta';
+import { metaLoadWithData } from '@opensky/seo';
 
 export const load: PageLoad = metaLoadWithData.page(({ params }) => {
 	// Ensure slug exists

@@ -20,6 +20,8 @@ Title templates are now stored in load data keyed by their route **verbatim** (e
 - Templates on routes with dynamic segments (`/blog/[slug]`), route groups (`/(marketing)`), underscores, or uppercase characters now work; the old sanitized-key round trip silently broke them.
 - `resetLayout` now clears inherited title templates (when the route is known, i.e. via helpers or by passing `routeId`).
 - `canonical` now renders `<link rel="canonical">` in addition to `og:url`.
+- Pages without an explicit `type` now emit default `og:type: website` and `twitter:card: summary` tags so every page has a card type.
+- Added a `default` condition to package `exports` so non-Svelte-aware tooling (vitest, plain node) can resolve the package.
 
 #### Zero Dependencies
 

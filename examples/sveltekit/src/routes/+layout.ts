@@ -1,11 +1,11 @@
-import { addMetaTags } from 'sveltekit-meta';
+import { addMetaTags } from '@opensky/seo';
 
 export async function load() {
 	return {
 		...addMetaTags.layout({
 			title: 'SvelteKit Meta Examples',
 			titleTemplate: { route: '/', template: '{page} | SvelteKit Meta Examples' },
-			description: 'Comprehensive examples demonstrating all features of sveltekit-meta including nested layouts, metadata types, and title templates.',
+			description: 'Comprehensive examples demonstrating all features of @opensky/seo including nested layouts, metadata types, and title templates.',
 			sitename: 'SvelteKit Meta Examples',
 			author: ['Jake', 'SvelteKit Meta Team'],
 			twitterSite: '@sveltekitmeta',

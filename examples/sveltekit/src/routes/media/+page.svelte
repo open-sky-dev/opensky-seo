@@ -1,5 +1,5 @@
 <h1>Media Examples</h1>
-<p>This page demonstrates all media metadata types supported by sveltekit-meta.</p>
+<p>This page demonstrates all media metadata types supported by @opensky/seo.</p>
 <p>Current title should be: "Media Examples | SvelteKit Meta Examples"</p>
 
 <div>

@@ -2,7 +2,7 @@
 	"name": "@opensky/seo",
 	"scripts": {
 		"test": "bun test src",
-		"check": "svelte-kit sync && tsc --noEmit --project ./tsconfig.json",
+		"check": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json",
 		"format": "oxfmt .",
 		"lint": "oxfmt --check . && eslint .",
 		"dev": "vite dev",
@@ -29,7 +29,6 @@
 	"devDependencies": {
 		"@eslint/compat": "^2.1.0",
 		"@eslint/js": "^10.0.1",
-		"@socketsecurity/bun-security-scanner": "^1.1.2",
 		"@sveltejs/kit": "^2.69.1",
 		"@sveltejs/package": "^2.5.8",
 		"@sveltejs/vite-plugin-svelte": "^7.1.2",
@@ -48,7 +47,8 @@
 	"exports": {
 		".": {
 			"types": "./dist/index.d.ts",
-			"svelte": "./dist/index.js"
+			"svelte": "./dist/index.js",
+			"default": "./dist/index.js"
 		}
 	},
 	"files": [

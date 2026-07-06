@@ -1,4 +1,4 @@
-import { metaLoad } from 'sveltekit-meta';
+import { metaLoad } from '@opensky/seo';
 
 export const load = metaLoad.page({
 	title: 'Media Examples',
@@ -6,17 +6,17 @@ export const load = metaLoad.page({
 	author: 'Media Team',
 	date: '2024-01-16T14:00:00.000Z',
 	type: 'largeImage',
-	// Single image
-	image: {
-		url: '/media/hero-image.jpg',
-		secureUrl: 'https://example.com/media/hero-image.jpg',
-		type: 'image/jpeg',
-		width: 1200,
-		height: 630,
-		alt: 'Hero image for media examples page'
-	},
-	// Multiple images
+	// Multiple images (mutually exclusive with the singular `image` property);
+	// the first entry is used as the twitter:image
 	images: [
+		{
+			url: '/media/hero-image.jpg',
+			secureUrl: 'https://example.com/media/hero-image.jpg',
+			type: 'image/jpeg',
+			width: 1200,
+			height: 630,
+			alt: 'Hero image for media examples page'
+		},
 		{
 			url: '/media/gallery-1.jpg',
 			secureUrl: 'https://example.com/media/gallery-1.jpg',

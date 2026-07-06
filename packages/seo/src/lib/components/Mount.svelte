@@ -130,6 +130,10 @@
 			<meta property="og:type" content="website" />
 			<meta name="twitter:card" content="summary" />
 		{/if}
+	{:else}
+		<!-- Sensible defaults so every page has a card type -->
+		<meta property="og:type" content="website" />
+		<meta name="twitter:card" content="summary" />
 	{/if}
 
 	<!-- SHARING: Author -->

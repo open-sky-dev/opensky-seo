@@ -1,4 +1,4 @@
-import { metaLoad } from 'sveltekit-meta';
+import { metaLoad } from '@opensky/seo';
 
 export const load = metaLoad.resetLayout({
 	title: 'Reset Layout',

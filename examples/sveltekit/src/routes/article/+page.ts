@@ -1,4 +1,4 @@
-import { metaLoad } from 'sveltekit-meta';
+import { metaLoad } from '@opensky/seo';
 
 export const load = metaLoad.page({
 	title: 'Comprehensive Article Example',
@@ -12,15 +12,16 @@ export const load = metaLoad.page({
 		twitter: 'largeImage',
 		og: 'article'
 	},
-	image: {
-		url: '/article/featured-image.jpg',
-		secureUrl: 'https://example.com/article/featured-image.jpg',
-		type: 'image/jpeg',
-		width: 1200,
-		height: 630,
-		alt: 'Featured image for comprehensive article example'
-	},
+	// image and images are mutually exclusive - the first entry doubles as the featured image
 	images: [
+		{
+			url: '/article/featured-image.jpg',
+			secureUrl: 'https://example.com/article/featured-image.jpg',
+			type: 'image/jpeg',
+			width: 1200,
+			height: 630,
+			alt: 'Featured image for comprehensive article example'
+		},
 		{
 			url: '/article/inline-1.jpg',
 			secureUrl: 'https://example.com/article/inline-1.jpg',

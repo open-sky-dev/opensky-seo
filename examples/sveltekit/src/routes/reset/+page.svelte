@@ -3,7 +3,7 @@
 	This page demonstrates resetLayout functionality that clears inherited metadata from parent
 	layouts.
 </p>
-<p>Current title should be: "Reset: Reset Layout" (not inheriting from root layout)</p>
+<p>Current title should be: "Reset Layout" (no template - the reset template applies to child routes, not this page)</p>
 
 <div>
 	<h2>Reset Layout Features:</h2>
@@ -19,7 +19,7 @@
 <div>
 	<h2>What's Different:</h2>
 	<ul>
-		<li>Title template: "Reset: {page}" instead of "{page} | SvelteKit Meta Examples"</li>
+		<li>Title template: "Reset: {'{page}'}" instead of "{'{page}'} | SvelteKit Meta Examples"</li>
 		<li>Theme: Red instead of light/dark variants</li>
 		<li>Color scheme: Light only instead of light/dark</li>
 		<li>Author: Reset Author instead of inherited authors</li>
