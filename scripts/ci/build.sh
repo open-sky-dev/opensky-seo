@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# svelte-package + publint
+cd "$(dirname "$0")/../.."
+
+bun install --frozen-lockfile
 bun run build

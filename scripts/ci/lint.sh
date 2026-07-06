@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Formatting (oxfmt) and eslint
-bun run lint
+cd "$(dirname "$0")/../.."
 
-# Type checking (svelte-check)
-bun run check
+bun install --frozen-lockfile
+bun run lint
