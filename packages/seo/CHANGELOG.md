@@ -21,6 +21,13 @@ Title templates are now stored in load data keyed by their route **verbatim** (e
 - `resetLayout` now clears inherited title templates (when the route is known, i.e. via helpers or by passing `routeId`).
 - `canonical` now renders `<link rel="canonical">` in addition to `og:url`.
 
+#### Zero Dependencies
+
+- Removed Zod — the package now has no runtime dependencies. The metadata types are hand-written TypeScript (same shapes as before), so nothing ships to the client for validation.
+- `image`/`images` and `video`/`videos` mutual exclusivity is now enforced at the type level: providing both is a compile error. At runtime (plain JS), the plural form still wins.
+- Validation warnings (title/description length advisories, titleTemplate misconfiguration) only run in dev (`import.meta.env.DEV`) and are dead-code-eliminated from production bundles.
+- The `metadataSchema` Zod schema is no longer exported. All type exports (`BaseMetadata`, `LayoutMetadata`, `PageMetadata`, `Media`, `IconOpinionated`, `ContentType`, `TitleTemplate`) are unchanged.
+
 #### Removed
 
 - The undocumented `additionalTags` pass-through in the head component. Use Svelte's native `<svelte:head>` for arbitrary extra tags — it composes with `SeoTags`.

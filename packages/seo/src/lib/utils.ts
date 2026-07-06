@@ -1,9 +1,39 @@
 import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
-import { metadataSchema } from './types/metadata'
-import { z } from 'zod'
 
 /** Prefixed on all metadata keys added to load data */
 export const PREFIX = '_meta'
+
+/**
+ * Vite statically replaces import.meta.env.DEV, so dev-only validation
+ * warnings are dead-code-eliminated from production bundles
+ */
+const DEV: boolean = import.meta.env?.DEV ?? false
+
+/**
+ * Every metadata key, nulled. The `satisfies` clause keeps this in sync with
+ * BaseMetadata at compile time: a missing or extra key fails to type-check.
+ */
+const NULL_METADATA = {
+	canonical: null,
+	icon: null,
+	maskIcon: null,
+	theme: null,
+	colorScheme: null,
+	sitename: null,
+	title: null,
+	titleTemplate: null,
+	description: null,
+	author: null,
+	twitterSite: null,
+	twitterCreator: null,
+	date: null,
+	modified: null,
+	type: null,
+	image: null,
+	images: null,
+	video: null,
+	videos: null
+} satisfies Record<keyof BaseMetadata, null>
 
 /**
  * Title templates are keyed by their route verbatim (e.g. '_meta-titleTemplate:/blog/[slug]').
@@ -21,15 +51,11 @@ export const TEMPLATE_RESET_KEY = `${PREFIX}-titleTemplateResetAt`
 /**
  * Generates a reset object with null values for all possible metadata keys.
  * This ensures all metadata from parent layouts is cleared.
- * Uses the Zod schema to automatically generate keys.
  */
 export function generateResetData(): Record<string, null> {
 	const resetData: Record<string, null> = {}
 
-	// Get all keys from the Zod schema
-	const schemaKeys = Object.keys(metadataSchema.shape)
-
-	for (const key of schemaKeys) {
+	for (const key of Object.keys(NULL_METADATA)) {
 		resetData[`${PREFIX}-${key}`] = null
 	}
 
@@ -107,16 +133,20 @@ function normalizeTitleTemplate(
 	}
 
 	if (template === undefined) {
-		console.warn(
-			'titleTemplate must be a template string or a { route?, template } object - skipping'
-		)
+		if (DEV) {
+			console.warn(
+				'titleTemplate must be a template string or a { route?, template } object - skipping'
+			)
+		}
 		return null
 	}
 
 	if (route === undefined) {
-		console.warn(
-			'titleTemplate needs a route. Pass { route, template } or use the metaLoad/metaLoadWithData helpers, which infer the route automatically - skipping'
-		)
+		if (DEV) {
+			console.warn(
+				'titleTemplate needs a route. Pass { route, template } or use the metaLoad/metaLoadWithData helpers, which infer the route automatically - skipping'
+			)
+		}
 		return null
 	}
 
@@ -183,67 +213,47 @@ export function resolveTitleTemplate(
 }
 
 /**
- * Validates and cleans metadata tags by checking character limits and handling mutual exclusivity conflicts.
- * Also runs Zod validation for additional error checking.
+ * Cleans metadata tags and, in dev, warns about SEO issues.
  *
- * This function performs the following validations:
- * - Warns if title exceeds 70 characters (SEO best practice)
- * - Warns if description exceeds 200 characters (SEO best practice)
- * - Resolves conflicts between 'image' and 'images' properties (keeps 'images')
- * - Resolves conflicts between 'video' and 'videos' properties (keeps 'videos')
- * - Runs Zod validation for additional error checking
+ * The image/images and video/videos exclusivity is enforced at the type level,
+ * but plain-JS callers can still pass both - the plural form wins at runtime.
+ * Character-limit warnings only run in dev and are stripped from production
+ * bundles.
  *
  * @param tags - The metadata object to validate and clean
  * @returns The cleaned metadata object with conflicts resolved
- *
- * @example
- * ```typescript
- * const cleanedTags = checkData({
- *   title: 'A very long title that exceeds the recommended character limit',
- *   description: 'A description that is also too long for SEO best practices',
- *   image: 'single-image.jpg',
- *   images: ['image1.jpg', 'image2.jpg']
- * });
- * // Returns: { images: ['image1.jpg', 'image2.jpg'] }
- * // Console warnings for title and description length, and image/images conflict
- * ```
  */
 export function checkData(
 	tags: BaseMetadata | LayoutMetadata | PageMetadata
 ): BaseMetadata | LayoutMetadata | PageMetadata {
-	// Handle character limit on title
-	if (tags.title && tags.title.length > 70) {
-		console.warn('Title exceeds recommended length of 70 characters')
-	}
-
-	// Handle character limit on description
-	if (tags.description && tags.description.length > 200) {
-		console.warn('Description exceeds recommended length of 200 characters')
-	}
-
-	// Handle mutual exclusivity for image/images
-	if ('image' in tags && 'images' in tags) {
-		console.warn('Both image and images properties specified - using images and ignoring image')
-		// Remove 'image' and keep 'images'
-		const { image, ...restData } = tags
-		tags = restData
-	}
-
-	// Handle mutual exclusivity for video/videos
-	if ('video' in tags && 'videos' in tags) {
-		console.warn('Both video and videos properties specified - using videos and ignoring video')
-		// Remove 'video' and keep 'videos'
-		const { video, ...restData } = tags
-		tags = restData
-	}
-
-	try {
-		metadataSchema.parse(tags)
-	} catch (error) {
-		if (error instanceof z.ZodError) {
-			console.warn('Additional validation warnings:', error.issues)
+	if (DEV) {
+		// SEO advisories - can't be checked statically since values are often dynamic
+		if (tags.title && tags.title.length > 70) {
+			console.warn('Title exceeds recommended length of 70 characters')
+		}
+		if (tags.description && tags.description.length > 200) {
+			console.warn('Description exceeds recommended length of 200 characters')
 		}
 	}
 
-	return tags
+	// The XOR types make these conflicts unrepresentable for TypeScript callers
+	// (narrowing them here collapses to never), so resolve them on a widened
+	// copy for the sake of plain-JS callers
+	const cleaned: Record<string, unknown> = { ...tags }
+
+	if (cleaned.image != null && cleaned.images != null) {
+		if (DEV) {
+			console.warn('Both image and images properties specified - using images and ignoring image')
+		}
+		delete cleaned.image
+	}
+
+	if (cleaned.video != null && cleaned.videos != null) {
+		if (DEV) {
+			console.warn('Both video and videos properties specified - using videos and ignoring video')
+		}
+		delete cleaned.video
+	}
+
+	return cleaned as BaseMetadata | LayoutMetadata | PageMetadata
 }

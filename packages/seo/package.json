@@ -22,9 +22,6 @@
 	"publishConfig": {
 		"access": "public"
 	},
-	"dependencies": {
-		"zod": "^4.4.3"
-	},
 	"peerDependencies": {
 		"@sveltejs/kit": "^2.0.0",
 		"svelte": "^5.0.0"

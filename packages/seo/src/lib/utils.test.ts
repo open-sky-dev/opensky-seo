@@ -143,6 +143,18 @@ describe('resolveTitleTemplate', () => {
 	})
 })
 
+describe('media exclusivity', () => {
+	test('providing both image and images is a type error; plural wins at runtime', () => {
+		const result = addMetaTagsLayout(
+			// @ts-expect-error - image and images are mutually exclusive at the type level
+			{ image: 'a.jpg', images: [{ url: 'b.jpg' }] },
+			'/'
+		)
+		expect(result['_meta-image']).toBeUndefined()
+		expect(result['_meta-images']).toEqual([{ url: 'b.jpg' }])
+	})
+})
+
 describe('cascade integration (simulated SvelteKit shallow merge)', () => {
 	test('templates from multiple layouts coexist and resolve per-route', () => {
 		// SvelteKit shallow-merges each load's return into page.data, deepest wins per key

@@ -1,148 +1,123 @@
-import { z } from 'zod'
-
-// Sub-schemas
-const iconOpinionatedSchema = z.object({
-	svg: z.string().optional(),
-	small: z
-		.object({
-			url: z.string(),
-			size: z.number(),
-			type: z.string().optional()
-		})
-		.optional(),
-	large: z
-		.object({
-			url: z.string(),
-			size: z.number(),
-			type: z.string().optional()
-		})
-		.optional()
-})
-
-const mediaSchema = z.object({
+export type Media = {
 	/** Primary URL for the media resource */
-	url: z.string(),
+	url: string
 	/** HTTPS URL for the media resource */
-	secureUrl: z.string().optional(),
+	secureUrl?: string
 	/** MIME type of the media */
-	type: z.string().optional(),
+	type?: string
 	/** Width in pixels */
-	width: z.number().optional(),
+	width?: number
 	/** Height in pixels */
-	height: z.number().optional(),
+	height?: number
 	/** Alt text description */
-	alt: z.string().optional()
-})
+	alt?: string
+}
 
-const contentTypeSchema = z.union([
-	z.literal('basic'),
-	z.literal('article'),
-	z.literal('largeImage'),
-	z.literal('player'),
-	z.object({
-		twitter: z.enum(['summary', 'largeImage', 'player']),
-		og: z.enum(['website', 'article'])
-	})
-])
+export type IconOpinionated = {
+	svg?: string
+	small?: {
+		url: string
+		size: number
+		type?: string
+	}
+	large?: {
+		url: string
+		size: number
+		type?: string
+	}
+}
 
-// Main metadata schema with JSDoc comments
-export const metadataSchema = z.object({
-	/** Canonical URL for the page */
-	canonical: z.string().optional(), // og:url link:rel:canonical
+/**
+ * Content type configuration
+ * Used to determine appropriate meta tags and social card formats
+ */
+export type ContentType =
+	| 'basic'
+	| 'article'
+	| 'largeImage'
+	| 'player'
+	| {
+			twitter: 'summary' | 'largeImage' | 'player'
+			og: 'website' | 'article'
+	  }
 
-	icon: z.union([z.string(), iconOpinionatedSchema]).optional(),
+/**
+ * Template for constructing children page titles.
+ * A plain string ('Staff: {page}') is scoped to the route of the layout that
+ * declares it (when using the metaLoad/metaLoadWithData helpers). Pass
+ * { route, template } to scope it to a different route explicitly.
+ */
+export type TitleTemplate =
+	| string
+	| {
+			route?: string
+			template: string
+	  }
+
+type MetadataCommon = {
+	/** Canonical URL for the page (link:rel:canonical, og:url) */
+	canonical?: string
+
+	icon?: string | IconOpinionated
 
 	/** Used for Safari Pinned Tabs */
-	maskIcon: z
-		.object({
-			/** Should provide an svg file */
-			url: z.string(),
-			/** Should provide a color in a hex value */
-			color: z.string().optional()
-		})
-		.optional(),
+	maskIcon?: {
+		/** Should provide an svg file */
+		url: string
+		/** Should provide a color in a hex value */
+		color?: string
+	}
 
 	/**
 	 * Theme color for the browser UI elements
 	 * You can provide a single string (hex, rgb, etc.)
 	 * or an object with { light, dark } variants.
 	 */
-	theme: z
-		.union([
-			z.string(),
-			z.object({
-				light: z.string(),
-				dark: z.string()
-			})
-		])
-		.optional(),
+	theme?: string | { light: string; dark: string }
 
-	/** Color scheme preference for the page */
-	colorScheme: z.string().optional(), // meta:color-scheme
+	/** Color scheme preference for the page (meta:color-scheme) */
+	colorScheme?: string
 
 	// Basic Data
-	sitename: z.string().optional(), // og:sitename
+	/** Name of the website (og:site_name) */
+	sitename?: string
 
-	/** @maxLength 70 chars for Twitter */
-	title: z.string().max(70).optional(), // og:title meta:title
+	/** Page title - keep under 70 chars for Twitter (og:title, meta:title) */
+	title?: string
 
-	/**
-	 * Template for constructing children page titles.
-	 * A plain string ('Staff: {page}') is scoped to the route of the layout that
-	 * declares it (when using the metaLoad/metaLoadWithData helpers). Pass
-	 * { route, template } to scope it to a different route explicitly.
-	 */
-	titleTemplate: z
-		.union([
-			z.string(),
-			z.object({
-				route: z.string().optional(),
-				template: z.string()
-			})
-		])
-		.optional(), // used to infer og:title meta:title twitter:title
+	titleTemplate?: TitleTemplate
 
-	/** @maxLength 200 chars for Twitter */
-	description: z.string().max(200).optional(), // og:description twitter:description meta:description
+	/** Page description - keep under 200 chars for Twitter (og:description, twitter:description) */
+	description?: string
 
-	/** Content Author(s) */
-	author: z.union([z.string(), z.array(z.string())]).optional(), // meta:author og:author
+	/** Content Author(s) (meta:author, og:author) */
+	author?: string | string[]
 
-	/** The X Account for the publishing site */
-	twitterSite: z.string().optional(), // twitter:site
+	/** The X Account for the publishing site (twitter:site) */
+	twitterSite?: string
 
-	/** The X Account for the author/creator of this page */
-	twitterCreator: z.string().optional(), // twitter:creator
+	/** The X Account for the author/creator of this page (twitter:creator) */
+	twitterCreator?: string
 
 	/**
-	 * Publication Date
+	 * Publication Date (og meta)
 	 * @format ISO 8601
 	 */
-	date: z.string().datetime().optional(), // og meta
+	date?: string
 
-	/** Last Modified Date */
-	modified: z.string().datetime().optional(), // og:modified-time meta:modified meta:last-modified
+	/** Last Modified Date (og:modified-time, meta:last-modified) */
+	modified?: string
 
-	/**
-	 * Content type configuration
-	 * Used to determine appropriate meta tags and social card formats
-	 */
-	type: contentTypeSchema.optional(),
+	type?: ContentType
+}
 
-	/** Media configuration */
-	image: z.union([z.string(), mediaSchema]).optional(),
-	images: z.array(mediaSchema).optional(),
-	video: z.union([z.string(), mediaSchema]).optional(),
-	videos: z.array(mediaSchema).optional()
-})
+// image/images and video/videos are mutually exclusive - enforced at the type
+// level so providing both is a compile error rather than a runtime warning
+type ImageXor = { image?: string | Media; images?: never } | { image?: never; images?: Media[] }
+type VideoXor = { video?: string | Media; videos?: never } | { video?: never; videos?: Media[] }
 
-// Derive types from the schema - single source of truth!
-export type BaseMetadata = z.infer<typeof metadataSchema>
+export type BaseMetadata = MetadataCommon & ImageXor & VideoXor
 export type LayoutMetadata = BaseMetadata
-export type PageMetadata = Omit<BaseMetadata, 'titleTemplate'>
-
-// Additional type exports for compatibility
-export type TitleTemplate = NonNullable<BaseMetadata['titleTemplate']>
-export type IconOpinionated = NonNullable<BaseMetadata['icon']>
-export type ContentType = NonNullable<BaseMetadata['type']>
-export type Media = NonNullable<BaseMetadata['image']> | NonNullable<BaseMetadata['images']>[number]
+// Omit must be applied to MetadataCommon (not the intersection) so the XOR
+// unions survive; Omit over the full type would flatten them away
+export type PageMetadata = Omit<MetadataCommon, 'titleTemplate'> & ImageXor & VideoXor

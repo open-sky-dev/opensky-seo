@@ -37,7 +37,8 @@ Congrats! You now have seo meta tags for your entire site. Customizing meta tags
 
 - **Data Cascade**: Define meta tags at the root level and override selectively at deeper levels
 - **Simple API**: Straightforward helper functions to reduce boiler plate code
-- **Type Safe**: Fully typed to make adding tags easier
+- **Type Safe**: Fully typed to make adding tags easier, with conflicting properties caught at compile time
+- **Zero Dependencies**: No runtime dependencies; dev-only validation warnings are stripped from production bundles
 - **Flexible Integration**: Works with SvelteKit's layout and page structure
 - **Performance Optimized**: Works with SvelteKit parallel execution of load functions
 - **SEO-friendly**: Fully supports server-side rendering
@@ -293,9 +294,9 @@ SvelteKit Meta supports a comprehensive range of metadata properties:
 | `theme`          | Theme color for browser UI elements (string or `{ light, dark }` object)                       |
 | `colorScheme`    | Color scheme preference for the page (meta:color-scheme)                                       |
 | `sitename`       | Name of the website (og:sitename)                                                              |
-| `title`          | Page title (warns if > 70 characters) (og:title, meta:title)                                   |
+| `title`          | Page title (warns in dev if > 70 characters) (og:title, meta:title)                            |
 | `titleTemplate`  | Template for child page titles, e.g. "Reviews - {page}". String (scoped to the declaring layout) or `{ route, template }` |
-| `description`    | Page description (warns if > 200 characters) (og:description, twitter:description)             |
+| `description`    | Page description (warns in dev if > 200 characters) (og:description, twitter:description)      |
 | `author`         | Content author(s) as string or array (meta:author, og:author)                                  |
 | `twitterSite`    | The X Account for the publishing site (twitter:site)                                           |
 | `twitterCreator` | The X Account for the author/creator of this page (twitter:creator)                            |
@@ -353,7 +354,7 @@ type ContentTypeAdvanced = {
 };
 ```
 
-> Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. The library will warn and use the plural version if both are specified.
+> Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. Providing both is a TypeScript error; if both slip through anyway (plain JS), the plural version wins.
 
 ## License
 
