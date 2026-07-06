@@ -44,10 +44,10 @@ export function metaLoadPage(metaTags: PageMetadata): Load {
  * ```
  */
 export function metaLoadLayout(metaTags: LayoutMetadata): Load {
-	return async ({ data }) => {
+	return async ({ data, route }) => {
 		return {
 			...data,
-			...addMetaTagsLayout(metaTags)
+			...addMetaTagsLayout(metaTags, route.id)
 		}
 	}
 }
@@ -69,10 +69,10 @@ export function metaLoadLayout(metaTags: LayoutMetadata): Load {
  * ```
  */
 export function metaLoadResetLayout(metaTags: LayoutMetadata): Load {
-	return async ({ data }) => {
+	return async ({ data, route }) => {
 		return {
 			...data,
-			...addMetaTagsResetLayout(metaTags)
+			...addMetaTagsResetLayout(metaTags, route.id)
 		}
 	}
 }

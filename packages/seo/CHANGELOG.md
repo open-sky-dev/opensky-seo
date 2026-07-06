@@ -1,5 +1,30 @@
 # Changelog
 
+## [1.2.0] - 2026-07-06
+
+### Title Template Overhaul
+
+Title templates are now stored in load data keyed by their route **verbatim** (e.g. `_meta-titleTemplate:/blog/[slug]`) instead of a lossy sanitized key, and are matched against SvelteKit route ids instead of URL pathnames. This fixes several matching bugs and enables a simpler API.
+
+#### Features
+
+- `titleTemplate` now accepts a plain string (e.g. `'Blog - {page}'`). When used with the `metaLoad`/`metaLoadWithData` helpers, it is automatically scoped to the declaring layout's route — no more manually keeping `route` in sync with the file's location. The `{ route, template }` object form still works, and `route` is now optional in it.
+- `addMetaTags.layout` and `addMetaTags.resetLayout` accept an optional second argument `routeId` (pass `route.id` from your load function) to enable the same auto-scoping in manual load functions.
+- `metaLoadWithData` callbacks may now be async and receive a typed `data` (narrowable via generic, e.g. `metaLoadWithData.page<{ post: Post }>(...)`).
+
+#### Fixed
+
+- The most specific (deepest) matching template now wins; previously the shallowest matched first.
+- A section's template no longer applies to the section's own page: visiting `/staff` with a template declared at `/staff` now uses the parent template ("Site - Staff") as documented, instead of "Staff - Staff".
+- Templates no longer match sibling routes sharing a string prefix (`/blog` vs `/blog-archive`).
+- Templates on routes with dynamic segments (`/blog/[slug]`), route groups (`/(marketing)`), underscores, or uppercase characters now work; the old sanitized-key round trip silently broke them.
+- `resetLayout` now clears inherited title templates (when the route is known, i.e. via helpers or by passing `routeId`).
+- `canonical` now renders `<link rel="canonical">` in addition to `og:url`.
+
+#### Removed
+
+- The undocumented `additionalTags` pass-through in the head component. Use Svelte's native `<svelte:head>` for arbitrary extra tags — it composes with `SeoTags`.
+
 ## [1.0.0] - 2024-12-19
 
 ### Breaking Changes

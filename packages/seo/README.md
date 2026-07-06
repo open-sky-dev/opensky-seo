@@ -67,17 +67,17 @@ export const load = metaLoad.layout({
 })
 ```
 
-### 2. Add the MetaTags component to your root layout template
+### 2. Add the SeoTags component to your root layout template
 
 ```svelte
 <!-- src/routes/+layout.svelte -->
 <script lang="ts">
-  import { MetaTags } from '@opensky/seo';
+  import { SeoTags } from '@opensky/seo';
 
   let { children } = $props();
 </script>
 
-<MetaTags />
+<SeoTags />
 
 {@render children()}
 ```
@@ -152,26 +152,53 @@ Use these functions when you want full control over your load function but still
 
 ## Title Templates
 
-Title templates allow you to define a pattern for constructing page titles. You are required to specify the route where the template is located. This allows us to evaluate multiple layers of title templates and decide which should be used.
-
-To understand this concern, consider the following: you have a `/staff` route with `/staff/+layout.ts` and `/staff/+page.ts` files and you also have `/staff/jeff` route. When you visit /staff you want to use the title from staff layout and the template from the higher layout, in this case root. But you also want a template to be defined in staff/layout which would be applied at /staff/jeff. The issue is that if you set a titleTemplate at staff/layout it will override the root layout's titleTemplate and so visiting /staff will use the titleTemplate from /staff/layout. Instead of "Site - Staff" using root template, it would be "Staff - Staff" using the staff layout template. By specifying route in the title template, we are able to determine which should be used based on the route being loaded.
+Title templates let you define a pattern for constructing page titles. Set one in a layout, and pages below it have their titles run through the template:
 
 ```typescript
-// Root layout - applies to all pages under /
+// src/routes/+layout.ts - applies to every page
 export const load = metaLoad.layout({
-	titleTemplate: { route: '/', template: 'My Site - {page}' }
+	titleTemplate: 'My Site - {page}'
 })
 
-// Blog layout - applies to all pages under /blog
+// src/routes/blog/+layout.ts - applies to pages below /blog
 export const load = metaLoad.layout({
-	titleTemplate: { route: '/blog', template: 'Blog - {page}' }
+	title: 'Blog',
+	titleTemplate: 'Blog - {page}'
 })
 
-// Individual page - will use the most specific template
+// src/routes/blog/[slug]/+page.ts
 export const load = metaLoad.page({
 	title: 'My Amazing Post'
 })
-// Result: "Blog - My Amazing Post" (uses /blog template)
+// Title at /blog/my-amazing-post: "Blog - My Amazing Post"
+```
+
+When you pass a plain string, the template is automatically scoped to the route of the layout that declares it. You can scope it to a different route explicitly with the object form:
+
+```typescript
+titleTemplate: { route: '/blog', template: 'Blog - {page}' }
+```
+
+### Matching Rules
+
+- A template applies to routes **below** its route - not the route itself. In the example above, visiting `/blog` produces "My Site - Blog" (the parent template), while `/blog/my-amazing-post` produces "Blog - My Amazing Post". This lets a section layout set its own title and a template for its children without the template applying to the section's landing page.
+- The root template (`/`) is the final fallback and applies everywhere, including the home page.
+- When several templates match, the most specific (deepest route) wins.
+- Matching is based on SvelteKit route ids, so layouts with dynamic segments (`/blog/[slug]`) work, and route groups (`/(marketing)`) are ignored since they don't appear in URLs.
+- `resetLayout` clears inherited templates along with the rest of the metadata cascade.
+
+### With addMetaTags
+
+The manual `addMetaTags` helpers can't see your route automatically. Either use the object form with an explicit `route`, or pass the route id from your load function:
+
+```typescript
+// +layout.ts
+export async function load({ data, route }) {
+	return {
+		...data,
+		...addMetaTags.layout({ titleTemplate: 'Docs - {page}' }, route.id)
+	}
+}
 ```
 
 ## Advanced Usage
@@ -184,7 +211,7 @@ For dynamic metadata, you can use the `metaLoadWithData` helper to incorporate r
 // src/routes/blog/[slug]/+page.ts
 import { metaLoadWithData } from '@opensky/seo'
 
-export const load = metaLoadWithData.page(({ params, data }) => {
+export const load = metaLoadWithData.page(async ({ params }) => {
 	const { slug } = params
 
 	// Fetch article data based on slug
@@ -196,6 +223,16 @@ export const load = metaLoadWithData.page(({ params, data }) => {
 		image: article.featuredImage
 	}
 })
+```
+
+### Adding Arbitrary Head Tags
+
+For tags this package doesn't manage (verification meta tags, extra link elements, scripts, etc.), use Svelte's native `<svelte:head>` in any page or layout. It composes with the tags rendered by `SeoTags`:
+
+```svelte
+<svelte:head>
+	<meta name="google-site-verification" content="..." />
+</svelte:head>
 ```
 
 ### Manual Integration
@@ -221,7 +258,7 @@ export async function load({ data, route, params }) {
 	return {
 		...data,
 		section,
-		...addMetaTags.layout({ title: section.title })
+		...addMetaTags.layout({ title: section.title }, route.id)
 	}
 }
 ```
@@ -248,27 +285,27 @@ export async function load({ data }) {
 
 SvelteKit Meta supports a comprehensive range of metadata properties:
 
-| Property         | Description                                                                                    |
-| ---------------- | ---------------------------------------------------------------------------------------------- |
-| `canonical`      | Canonical URL for the page (og:url, link:rel:canonical)                                        |
-| `icon`           | Favicon path as string or IconOpinionated object                                               |
-| `maskIcon`       | Object with `url` (svg file) and optional `color` (hex) for Safari Pinned Tabs                 |
-| `theme`          | Theme color for browser UI elements (string or `{ light, dark }` object)                       |
-| `colorScheme`    | Color scheme preference for the page (meta:color-scheme)                                       |
-| `sitename`       | Name of the website (og:sitename)                                                              |
-| `title`          | Page title (warns if > 70 characters) (og:title, meta:title)                                   |
-| `titleTemplate`  | Template for constructing child page titles (e.g., "Reviews - {page}")                         |
-| `description`    | Page description (warns if > 200 characters) (og:description, twitter:description)             |
-| `author`         | Content author(s) as string or array (meta:author, og:author)                                  |
-| `twitterSite`    | The X Account for the publishing site (twitter:site)                                           |
-| `twitterCreator` | The X Account for the author/creator of this page (twitter:creator)                            |
-| `date`           | Publication date in ISO 8601 format (og meta)                                                  |
-| `modified`       | Last modified date (og:modified-time, meta:modified, meta:last-modified)                       |
-| `type`           | Content type configuration (`basic`, `article`, `largeImage`, `player` or ContentTypeAdvanced) |
-| `image`          | Primary image for social sharing (string or Media object)                                      |
-| `images`         | Multiple images for social sharing (array of Media objects)                                    |
-| `video`          | Primary video for social sharing (string or Media object)                                      |
-| `videos`         | Multiple videos for social sharing (array of Media objects)                                    |
+| Property         | Description                                                                                                               |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| `canonical`      | Canonical URL for the page (og:url, link:rel:canonical)                                                                   |
+| `icon`           | Favicon path as string or IconOpinionated object                                                                          |
+| `maskIcon`       | Object with `url` (svg file) and optional `color` (hex) for Safari Pinned Tabs                                            |
+| `theme`          | Theme color for browser UI elements (string or `{ light, dark }` object)                                                  |
+| `colorScheme`    | Color scheme preference for the page (meta:color-scheme)                                                                  |
+| `sitename`       | Name of the website (og:sitename)                                                                                         |
+| `title`          | Page title (warns if > 70 characters) (og:title, meta:title)                                                              |
+| `titleTemplate`  | Template for child page titles, e.g. "Reviews - {page}". String (scoped to the declaring layout) or `{ route, template }` |
+| `description`    | Page description (warns if > 200 characters) (og:description, twitter:description)                                        |
+| `author`         | Content author(s) as string or array (meta:author, og:author)                                                             |
+| `twitterSite`    | The X Account for the publishing site (twitter:site)                                                                      |
+| `twitterCreator` | The X Account for the author/creator of this page (twitter:creator)                                                       |
+| `date`           | Publication date in ISO 8601 format (og meta)                                                                             |
+| `modified`       | Last modified date (og:modified-time, meta:modified, meta:last-modified)                                                  |
+| `type`           | Content type configuration (`basic`, `article`, `largeImage`, `player` or ContentTypeAdvanced)                            |
+| `image`          | Primary image for social sharing (string or Media object)                                                                 |
+| `images`         | Multiple images for social sharing (array of Media objects)                                                               |
+| `video`          | Primary video for social sharing (string or Media object)                                                                 |
+| `videos`         | Multiple videos for social sharing (array of Media objects)                                                               |
 
 ### Media Object Structure
 

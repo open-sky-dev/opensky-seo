@@ -87,14 +87,19 @@ export const metadataSchema = z.object({
 	title: z.string().max(70).optional(), // og:title meta:title
 
 	/**
-	 * Template for constructing children page titles
-	 * Example: { route: "/staff", template: "Staff: {page}" }
+	 * Template for constructing children page titles.
+	 * A plain string ('Staff: {page}') is scoped to the route of the layout that
+	 * declares it (when using the metaLoad/metaLoadWithData helpers). Pass
+	 * { route, template } to scope it to a different route explicitly.
 	 */
 	titleTemplate: z
-		.object({
-			route: z.string(),
-			template: z.string()
-		})
+		.union([
+			z.string(),
+			z.object({
+				route: z.string().optional(),
+				template: z.string()
+			})
+		])
 		.optional(), // used to infer og:title meta:title twitter:title
 
 	/** @maxLength 200 chars for Twitter */

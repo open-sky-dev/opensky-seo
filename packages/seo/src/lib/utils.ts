@@ -1,7 +1,22 @@
 import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
 import { metadataSchema } from './types/metadata'
-import { PREFIX } from './index'
 import { z } from 'zod'
+
+/** Prefixed on all metadata keys added to load data */
+export const PREFIX = '_meta'
+
+/**
+ * Title templates are keyed by their route verbatim (e.g. '_meta-titleTemplate:/blog/[slug]').
+ * Keying by route lets multiple templates coexist in SvelteKit's shallow data merge,
+ * and keeping the route verbatim makes the key -> route round trip lossless.
+ */
+export const TEMPLATE_KEY_PREFIX = `${PREFIX}-titleTemplate:`
+
+/**
+ * Written by the resetLayout helpers. Templates declared at routes outside
+ * this boundary are ignored when resolving the active template.
+ */
+export const TEMPLATE_RESET_KEY = `${PREFIX}-titleTemplateResetAt`
 
 /**
  * Generates a reset object with null values for all possible metadata keys.
@@ -24,27 +39,30 @@ export function generateResetData(): Record<string, null> {
 /**
  * Transforms metadata object keys to prefixed format for SvelteKit data cascade.
  * Converts top-level keys like 'title', 'description' to '_meta-title', '_meta-description'.
- * Handles titleTemplate specially by creating a route-specific key.
+ * Handles titleTemplate specially by creating a route-keyed entry.
  *
- * @param metadata - The metadata object to transform
+ * @param data - The metadata object to transform
+ * @param routeId - The declaring route's id (from the load event); used to scope
+ *   titleTemplate when no explicit route is given
  * @returns Object with prefixed keys for SvelteKit data cascade
  *
  * @example
  * ```typescript
- * const result = transformMetadataKeys({
- *   title: "My Page",
- *   description: "Page description",
- *   titleTemplate: { route: "/blog", template: "Blog: {page}" }
- * });
+ * const result = transformMetadataKeys(
+ *   {
+ *     title: 'My Page',
+ *     titleTemplate: { route: '/blog', template: 'Blog: {page}' }
+ *   }
+ * );
  * // Returns: {
- * //   "_meta-title": "My Page",
- * //   "_meta-description": "Page description",
- * //   "_meta_blog-title-template": "Blog: {page}"
+ * //   '_meta-title': 'My Page',
+ * //   '_meta-titleTemplate:/blog': 'Blog: {page}'
  * // }
  * ```
  */
 export function transformMetadataKeys(
-	data: LayoutMetadata | BaseMetadata | PageMetadata
+	data: LayoutMetadata | BaseMetadata | PageMetadata,
+	routeId?: string
 ): Record<string, unknown> {
 	const result: Record<string, unknown> = {}
 
@@ -52,26 +70,12 @@ export function transformMetadataKeys(
 		// Skip if value is nullish
 		if (value === undefined || value === null) continue
 
-		// Handle titleTemplate to use route in key
-		if (isTitleTemplate(key, value)) {
-			const route = value.route
-			let routeKey: string
-
-			// Handle the root route
-			if (!route || route === '' || route === '/') {
-				routeKey = 'root'
-			} else {
-				routeKey = route
-					.replace(/[[\]()]/g, '') // Remove brackets and parentheses
-					.replace(/[^a-zA-Z0-9_]/g, '_') // Replace any non-alphanumeric chars with underscores
-					.replace(/_+/g, '_') // Collapse multiple underscores into single
-					.replace(/^_|_$/g, '') // Remove leading/trailing underscores
-					.toLowerCase() // Convert to lowercase for consistency
+		// Handle titleTemplate to key it by route
+		if (key === 'titleTemplate') {
+			const normalized = normalizeTitleTemplate(value, routeId)
+			if (normalized) {
+				result[`${TEMPLATE_KEY_PREFIX}${normalized.route}`] = normalized.template
 			}
-
-			const templateKey = `${PREFIX}_${routeKey}-title-template`
-			result[templateKey] = value.template
-
 			continue
 		}
 
@@ -82,20 +86,100 @@ export function transformMetadataKeys(
 	return result
 }
 
-const isTitleTemplate = (
-	key: string,
-	value: unknown
-): value is { route: string; template: string } => {
-	if (key === 'titleTemplate') {
-		if (typeof value === 'object' && value !== null && 'route' in value && 'template' in value) {
-			return true
-		} else {
-			console.warn('titleTemplate has error. Missing route or template in object')
-			return false
-		}
-	} else {
-		return false
+/**
+ * Normalizes the accepted titleTemplate forms into { route, template }.
+ * A plain string template (or an object without a route) is scoped to the
+ * declaring route when one is available.
+ */
+function normalizeTitleTemplate(
+	value: unknown,
+	declaringRoute?: string
+): { route: string; template: string } | null {
+	let route: string | undefined = declaringRoute
+	let template: string | undefined
+
+	if (typeof value === 'string') {
+		template = value
+	} else if (typeof value === 'object' && value !== null) {
+		const obj = value as { route?: unknown; template?: unknown }
+		if (typeof obj.template === 'string') template = obj.template
+		if (typeof obj.route === 'string') route = obj.route
 	}
+
+	if (template === undefined) {
+		console.warn(
+			'titleTemplate must be a template string or a { route?, template } object - skipping'
+		)
+		return null
+	}
+
+	if (route === undefined) {
+		console.warn(
+			'titleTemplate needs a route. Pass { route, template } or use the metaLoad/metaLoadWithData helpers, which infer the route automatically - skipping'
+		)
+		return null
+	}
+
+	return { route: normalizeRoute(route), template }
+}
+
+/** Ensures a leading slash and no trailing slash ('/blog/' -> '/blog', '/' -> '/') */
+export function normalizeRoute(route: string): string {
+	return '/' + route.split('/').filter(Boolean).join('/')
+}
+
+/** Removes group segments like '(marketing)', which don't appear in URLs */
+export function stripRouteGroups(route: string): string {
+	const segments = route.split('/').filter((s) => s && !(s.startsWith('(') && s.endsWith(')')))
+	return '/' + segments.join('/')
+}
+
+const routeDepth = (route: string): number => (route === '/' ? 0 : route.split('/').length - 1)
+
+const isAtOrBelow = (route: string, ancestor: string): boolean =>
+	ancestor === '/' || route === ancestor || route.startsWith(ancestor + '/')
+
+/**
+ * A template applies to routes strictly below its declared route - a section's
+ * template shouldn't format the section's own landing page; the parent template
+ * handles that. The root template is the fallback and applies everywhere.
+ */
+const templateAppliesTo = (templateRoute: string, currentRoute: string): boolean =>
+	templateRoute === '/' ? true : currentRoute.startsWith(templateRoute + '/')
+
+/**
+ * Resolves the active title template for the current route from merged load data.
+ * The deepest template whose route is an ancestor of the current route wins.
+ * Respects the reset boundary written by resetLayout helpers.
+ *
+ * @param data - Merged page data (page.data)
+ * @param currentRoute - The current route id (page.route.id), or a pathname as fallback
+ * @returns The winning template string, or null if none applies
+ */
+export function resolveTitleTemplate(
+	data: Record<string, unknown>,
+	currentRoute: string | null | undefined
+): string | null {
+	if (!currentRoute) return null
+	const current = stripRouteGroups(currentRoute)
+
+	const resetAt = data[TEMPLATE_RESET_KEY]
+	const boundary = typeof resetAt === 'string' ? stripRouteGroups(resetAt) : null
+
+	let best: { route: string; template: string } | null = null
+	for (const [key, value] of Object.entries(data)) {
+		if (!key.startsWith(TEMPLATE_KEY_PREFIX) || typeof value !== 'string') continue
+
+		const route = stripRouteGroups(key.slice(TEMPLATE_KEY_PREFIX.length))
+		if (boundary !== null && !isAtOrBelow(route, boundary)) continue
+		if (!templateAppliesTo(route, current)) continue
+
+		if (best === null || routeDepth(route) > routeDepth(best.route)) {
+			best = { route, template: value }
+		}
+	}
+
+	return best?.template ?? null
 }
 
 /**

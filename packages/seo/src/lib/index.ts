@@ -6,7 +6,7 @@ import {
 	metaLoadWithDataResetLayout
 } from './meta-load-with-data'
 
-export const PREFIX = '_meta' // This will be prefixed for all metadata added to load data
+export { PREFIX } from './utils' // Prefixed on all metadata added to load data
 
 /**
  * Convenience object for creating SvelteKit load functions with static metadata.

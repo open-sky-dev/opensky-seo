@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
+	import { resolveTitleTemplate } from '../utils'
 
 	// page from $app/state is reactive, so this stays current across navigations and invalidations
 	const data = $derived(page.data)
@@ -12,76 +13,23 @@
 		$inspect(data)
 	}
 
-	// Get all title template keys
-	const titleTemplateKeys = $derived.by(() => {
-		const keys = Object.keys(data).filter((key: string) => key.endsWith('-title-template'))
-		if (debug) { console.log('🔍 [Mount] Found title template keys:', keys) }
-		return keys
-	})
-
-	// Get current route path
-	const currentRoute = $derived.by(() => {
-		const route = page.url.pathname
-		return route
-	})
-
-	// Find the appropriate title template based on route depth
+	// Templates are matched against the route pattern so dynamic segments and
+	// route groups behave; pathname is only a fallback (route.id is null on errors)
 	const activeTitleTemplate = $derived.by(() => {
-		if (titleTemplateKeys.length === 0) {
-			return null
-		}
-
-		// Sort title templates by depth (root first, then by path length)
-		const sortedTemplates = titleTemplateKeys
-			.map((key: string) => {
-				const route = key.replace('_meta_', '').replace('-title-template', '')
-				const depth = route === 'root' ? 0 : route.split('_').length
-				return { key, route, depth, template: data[key] }
-			})
-			.sort((a, b) => a.depth - b.depth)
-
-		if (debug) { console.log('🔍 [Mount] Sorted title templates:', sortedTemplates) }
-
-		// Find the best matching template for current route
-		for (const template of sortedTemplates) {
-			if (template.route === 'root') {
-				// Don't return root immediately, check for more specific matches first
-				continue
-			}
-
-			// Check if current route starts with this template's route
-			const templateRoute = '/' + template.route.replace(/_/g, '/')
-
-			if (currentRoute.startsWith(templateRoute)) {
-				return template
-			}
-		}
-
-		// If no specific match found, check for root template
-		const rootTemplate = sortedTemplates.find((t) => t.route === 'root')
-		if (rootTemplate) {
-			return rootTemplate
-		}
-
-		return null
+		const template = resolveTitleTemplate(data, page.route.id ?? page.url.pathname)
+		if (debug) { console.log('🔍 [SeoTags] Active title template:', template) }
+		return template
 	})
 
 	// Get the title from the current route level
-	const currentTitle = $derived.by(() => {
-		const titleKey = '_meta-title'
-		const title = data[titleKey] || null
-		return title
-	})
+	const currentTitle = $derived(data['_meta-title'] || null)
 
 	// Combine title template with current title
-	const combinedTitle = $derived.by(() => {
-		if (activeTitleTemplate && currentTitle) {
-			const result = activeTitleTemplate.template.replace('{page}', currentTitle)
-			return result
-		} else {
-			return currentTitle
-		}
-	})
+	const combinedTitle = $derived(
+		activeTitleTemplate && currentTitle
+			? activeTitleTemplate.replace('{page}', currentTitle)
+			: currentTitle
+	)
 
 	// Helper function to get metadata value
 	const getMetaValue = (key: string) => {
@@ -97,6 +45,7 @@
 <svelte:head>
 	<!-- SEO: Canonical URL -->
 	{#if hasMeta('canonical')}
+		<link rel="canonical" href={getMetaValue('canonical')} />
 		<meta property="og:url" content={getMetaValue('canonical')} />
 	{/if}
 
@@ -298,20 +247,5 @@
 	<!-- TWITTER: Creator Account -->
 	{#if hasMeta('twitterCreator')}
 		<meta name="twitter:creator" content={getMetaValue('twitterCreator')} />
-	{/if}
-
-	<!-- Arbitrary meta, link, script tags -->
-	{#if hasMeta('additionalTags')}
-		{@const additionalTags = getMetaValue('additionalTags')}
-		{#each additionalTags as tag (tag)}
-			{@const { tagType, ...attributes } = tag}
-			{#if tagType === 'meta'}
-				<meta {...attributes} />
-			{:else if tagType === 'link'}
-				<link {...attributes} />
-			{:else if tagType === 'script'}
-				<script {...attributes}></script>
-			{/if}
-		{/each}
 	{/if}
 </svelte:head>
