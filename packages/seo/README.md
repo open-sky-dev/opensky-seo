@@ -6,15 +6,15 @@ You define your metadata in `+page.ts` or `+layout.ts` load functions, using our
 
 ```typescript
 // src/routes/+layout.ts
-import { metaLoad } from "@opensky/seo";
+import { metaLoad } from '@opensky/seo'
 
 export const load = metaLoad.layout({
-  sitename: "My Awesome Site",
-  title: "Home",
-  titleTemplate: "My Awesome Site - {page}",
-  description: "A fantastic SvelteKit application",
-  icon: "./favicon.png",
-});
+	sitename: 'My Awesome Site',
+	title: 'Home',
+	titleTemplate: 'My Awesome Site - {page}',
+	description: 'A fantastic SvelteKit application',
+	icon: './favicon.png'
+})
 ```
 
 Congrats! You now have seo meta tags for your entire site. Customizing meta tags from here on is easy
@@ -56,15 +56,15 @@ npm install @opensky/seo
 
 ```typescript
 // src/routes/+layout.ts
-import { metaLoad } from "@opensky/seo";
+import { metaLoad } from '@opensky/seo'
 
 export const load = metaLoad.layout({
-  sitename: "My SvelteKit App",
-  title: "Welcome",
-  titleTemplate: "My SvelteKit App - {page}",
-  description: "A fantastic SvelteKit application",
-  icon: "./favicon.png",
-});
+	sitename: 'My SvelteKit App',
+	title: 'Welcome',
+	titleTemplate: 'My SvelteKit App - {page}',
+	description: 'A fantastic SvelteKit application',
+	icon: './favicon.png'
+})
 ```
 
 ### 2. Add the MetaTags component to your root layout template
@@ -86,23 +86,23 @@ export const load = metaLoad.layout({
 
 ```typescript
 // src/routes/blog/+layout.ts
-import { metaLoad } from "@opensky/seo";
+import { metaLoad } from '@opensky/seo'
 
 export const load = metaLoad.layout({
-  title: "Blog",
-  titleTemplate: "Svelte Blog - {page}",
-  description: "Read our latest articles and updates",
-});
+	title: 'Blog',
+	titleTemplate: 'Svelte Blog - {page}',
+	description: 'Read our latest articles and updates'
+})
 ```
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { metaLoadWithData } from "@opensky/seo";
+import { metaLoadWithData } from '@opensky/seo'
 
 export const load = metaLoadWithData.page(({ data }) => ({
-  title: data.post.title,
-  description: "This is a detailed description of my blog post",
-}));
+	title: data.post.title,
+	description: 'This is a detailed description of my blog post'
+}))
 ```
 
 And that's it! Your meta tags will be automatically generated and updated across your site.
@@ -159,18 +159,18 @@ To understand this concern, consider the following: you have a `/staff` route wi
 ```typescript
 // Root layout - applies to all pages under /
 export const load = metaLoad.layout({
-  titleTemplate: { route: "/", template: "My Site - {page}" },
-});
+	titleTemplate: { route: '/', template: 'My Site - {page}' }
+})
 
 // Blog layout - applies to all pages under /blog
 export const load = metaLoad.layout({
-  titleTemplate: { route: "/blog", template: "Blog - {page}" },
-});
+	titleTemplate: { route: '/blog', template: 'Blog - {page}' }
+})
 
 // Individual page - will use the most specific template
 export const load = metaLoad.page({
-  title: "My Amazing Post",
-});
+	title: 'My Amazing Post'
+})
 // Result: "Blog - My Amazing Post" (uses /blog template)
 ```
 
@@ -182,20 +182,20 @@ For dynamic metadata, you can use the `metaLoadWithData` helper to incorporate r
 
 ```typescript
 // src/routes/blog/[slug]/+page.ts
-import { metaLoadWithData } from "@opensky/seo";
+import { metaLoadWithData } from '@opensky/seo'
 
 export const load = metaLoadWithData.page(({ params, data }) => {
-  const { slug } = params;
+	const { slug } = params
 
-  // Fetch article data based on slug
-  const article = await getArticleBySlug(slug);
+	// Fetch article data based on slug
+	const article = await getArticleBySlug(slug)
 
-  return {
-    title: article.title,
-    description: article.excerpt,
-    image: article.featuredImage,
-  };
-});
+	return {
+		title: article.title,
+		description: article.excerpt,
+		image: article.featuredImage
+	}
+})
 ```
 
 ### Manual Integration
@@ -205,24 +205,24 @@ If you need full control over your load function, you can use the `addMetaTags` 
 ```typescript
 // +page.ts
 export async function load({ data, route, params, url }) {
-  const post = await fetchPost(params.slug);
+	const post = await fetchPost(params.slug)
 
-  return {
-    ...data,
-    post,
-    ...addMetaTags.page({ title: post.title }),
-  };
+	return {
+		...data,
+		post,
+		...addMetaTags.page({ title: post.title })
+	}
 }
 
 // +layout.ts
 export async function load({ data, route, params }) {
-  const section = await fetchSection();
+	const section = await fetchSection()
 
-  return {
-    ...data,
-    section,
-    ...addMetaTags.layout({ title: section.title }),
-  };
+	return {
+		...data,
+		section,
+		...addMetaTags.layout({ title: section.title })
+	}
 }
 ```
 
@@ -230,17 +230,17 @@ export async function load({ data, route, params }) {
 
 The `metaLoadWithData` and `metaLoad` helpers automatically merge parent data, server data, and your meta data. If you are using addMetaTags, it is important that you handle this otherwise server data will not reach the page.
 
-You must take in `data` as a destructured argument in your load function and spread it on the return value 
+You must take in `data` as a destructured argument in your load function and spread it on the return value
 
 ```typescript
 // +page.ts
 export async function load({ data }) {
-                          /* ^ include data */
-  return {
-    ...data,
-    /* ^ include data */
-    ...addMetaTags.page({ title: post.title }),
-  };
+	/* ^ include data */
+	return {
+		...data,
+		/* ^ include data */
+		...addMetaTags.page({ title: post.title })
+	}
 }
 ```
 
@@ -276,13 +276,13 @@ Media objects for images and videos can include:
 
 ```typescript
 type Media = {
-  url: string; // Primary URL for the media resource
-  secureUrl?: string; // HTTPS URL for the media resource
-  type?: string; // MIME type of the media
-  width?: number; // Width in pixels
-  height?: number; // Height in pixels
-  alt?: string; // Alt text description
-};
+	url: string // Primary URL for the media resource
+	secureUrl?: string // HTTPS URL for the media resource
+	type?: string // MIME type of the media
+	width?: number // Width in pixels
+	height?: number // Height in pixels
+	alt?: string // Alt text description
+}
 ```
 
 ### Icon Configuration
@@ -291,18 +291,18 @@ Icons can be configured with more advanced options:
 
 ```typescript
 type IconOpinionated = {
-  svg?: string;
-  small?: {
-    url: string;
-    size: number;
-    type?: string;
-  };
-  large?: {
-    url: string;
-    size: number;
-    type?: string;
-  };
-};
+	svg?: string
+	small?: {
+		url: string
+		size: number
+		type?: string
+	}
+	large?: {
+		url: string
+		size: number
+		type?: string
+	}
+}
 ```
 
 ### Content Type Configuration
@@ -311,9 +311,9 @@ Content type can be configured with advanced options for different platforms:
 
 ```typescript
 type ContentTypeAdvanced = {
-  twitter: "summary" | "largeImage" | "player";
-  og: "website" | "article";
-};
+	twitter: 'summary' | 'largeImage' | 'player'
+	og: 'website' | 'article'
+}
 ```
 
 > Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. The library will warn and use the plural version if both are specified.

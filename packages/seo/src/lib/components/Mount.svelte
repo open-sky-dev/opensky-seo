@@ -1,17 +1,16 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { afterNavigate } from '$app/navigation'
 
-	let data = $state(page.data)
-	afterNavigate(() => { data = page.data }) // Update data after navigation
-	
-	let { debug } = $props()
-	if (debug) { $inspect(data) }
-	
-	// Get all metadata keys from page data
-	const metaKeys = $derived.by(() => {
-		return Object.keys(data).filter((key: string) => key.startsWith('_meta-'))
-	})
+	// page from $app/state is reactive, so this stays current across navigations and invalidations
+	const data = $derived(page.data)
+
+	let { debug = false } = $props()
+	// debug is a mount-time flag, so reading its initial value here is intentional
+	// svelte-ignore state_referenced_locally
+	if (debug) {
+		// eslint-disable-next-line svelte/no-inspect -- opt-in debug feature; no-op in prod builds
+		$inspect(data)
+	}
 
 	// Get all title template keys
 	const titleTemplateKeys = $derived.by(() => {
@@ -39,7 +38,7 @@
 				const depth = route === 'root' ? 0 : route.split('_').length
 				return { key, route, depth, template: data[key] }
 			})
-			.sort((a: any, b: any) => a.depth - b.depth)
+			.sort((a, b) => a.depth - b.depth)
 
 		if (debug) { console.log('🔍 [Mount] Sorted title templates:', sortedTemplates) }
 
@@ -189,7 +188,7 @@
 		{@const author = getMetaValue('author')}
 		{#if Array.isArray(author)}
 			<meta name="author" content={author.join(', ')} />
-			{#each author as authorName}
+			{#each author as authorName (authorName)}
 				<meta property="article:author" content={authorName} />
 			{/each}
 		{:else}
@@ -219,7 +218,7 @@
 	{/if}
 	{#if hasMeta('images')}
 		{@const images = getMetaValue('images')}
-		{#each images as image, i}
+		{#each images as image, i (i)}
 			<!-- Set twitter:image only for the first image -->
 			{#if i === 0}
 				<meta name="twitter:image" content={image.url} />
@@ -260,7 +259,7 @@
 	{/if}
 	{#if hasMeta('videos')}
 		{@const videos = getMetaValue('videos')}
-		{#each videos as video, i}
+		{#each videos as video, i (i)}
 			<!-- Set twitter:player only for the first video -->
 			{#if i === 0}
 				<meta name="twitter:player" content={video.url} />
@@ -304,7 +303,7 @@
 	<!-- Arbitrary meta, link, script tags -->
 	{#if hasMeta('additionalTags')}
 		{@const additionalTags = getMetaValue('additionalTags')}
-		{#each additionalTags as tag}
+		{#each additionalTags as tag (tag)}
 			{@const { tagType, ...attributes } = tag}
 			{#if tagType === 'meta'}
 				<meta {...attributes} />

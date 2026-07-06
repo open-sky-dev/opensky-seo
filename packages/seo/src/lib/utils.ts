@@ -45,8 +45,8 @@ export function generateResetData(): Record<string, null> {
  */
 export function transformMetadataKeys(
 	data: LayoutMetadata | BaseMetadata | PageMetadata
-): Record<string, any> {
-	const result: Record<string, any> = {}
+): Record<string, unknown> {
+	const result: Record<string, unknown> = {}
 
 	for (const [key, value] of Object.entries(data)) {
 		// Skip if value is nullish
@@ -62,7 +62,7 @@ export function transformMetadataKeys(
 				routeKey = 'root'
 			} else {
 				routeKey = route
-					.replace(/[\[\]()]/g, '') // Remove brackets and parentheses
+					.replace(/[[\]()]/g, '') // Remove brackets and parentheses
 					.replace(/[^a-zA-Z0-9_]/g, '_') // Replace any non-alphanumeric chars with underscores
 					.replace(/_+/g, '_') // Collapse multiple underscores into single
 					.replace(/^_|_$/g, '') // Remove leading/trailing underscores
@@ -82,7 +82,10 @@ export function transformMetadataKeys(
 	return result
 }
 
-const isTitleTemplate = (key: string, value: any): value is { route: string; template: string } => {
+const isTitleTemplate = (
+	key: string,
+	value: unknown
+): value is { route: string; template: string } => {
 	if (key === 'titleTemplate') {
 		if (typeof value === 'object' && value !== null && 'route' in value && 'template' in value) {
 			return true

@@ -5,7 +5,6 @@ import js from '@eslint/js'
 import ts from 'typescript-eslint'
 import svelte from 'eslint-plugin-svelte'
 import globals from 'globals'
-import svelteConfig from './svelte.config.js'
 
 const gitignorePath = fileURLToPath(new URL('./.gitignore', import.meta.url))
 
@@ -21,7 +20,9 @@ export default defineConfig(
 		rules: {
 			// typescript-eslint strongly recommend that you do not use the no-undef lint rule on TypeScript projects.
 			// see: https://typescript-eslint.io/troubleshooting/faqs/eslint/#i-get-errors-from-the-no-undef-rule-about-global-variables-not-being-defined-even-though-there-are-no-typescript-errors
-			'no-undef': 'off'
+			'no-undef': 'off',
+			// Allow omitting keys via rest destructuring: const { image, ...rest } = tags
+			'@typescript-eslint/no-unused-vars': ['error', { ignoreRestSiblings: true }]
 		}
 	},
 	{
@@ -30,8 +31,9 @@ export default defineConfig(
 			parserOptions: {
 				projectService: true,
 				extraFileExtensions: ['.svelte'],
-				parser: ts.parser,
-				svelteConfig
+				parser: ts.parser
+				// svelte config lives inline in vite.config.ts (SvelteKit 2.62+);
+				// the parser works with defaults since there's no svelte.config.js to point it at
 			}
 		}
 	}

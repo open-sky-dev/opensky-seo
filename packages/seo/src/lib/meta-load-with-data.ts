@@ -1,6 +1,6 @@
-import type { LayoutMetadata, PageMetadata } from './types/metadata';
-import type { Load, LoadEvent } from '@sveltejs/kit';
-import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags';
+import type { LayoutMetadata, PageMetadata } from './types/metadata'
+import type { Load, LoadEvent } from '@sveltejs/kit'
+import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './add-meta-tags'
 
 /**
  * Creates a page load function that adds metadata with access to load context.
@@ -19,16 +19,21 @@ import { addMetaTagsPage, addMetaTagsLayout, addMetaTagsResetLayout } from './ad
  * ```
  */
 export function metaLoadWithDataPage(
-	callback: (context: { data: unknown; route: LoadEvent['route']; params: LoadEvent['params']; url: LoadEvent['url'] }) => PageMetadata
+	callback: (context: {
+		data: unknown
+		route: LoadEvent['route']
+		params: LoadEvent['params']
+		url: LoadEvent['url']
+	}) => PageMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaTags = callback({ data, route, params, url });
+		const metaTags = callback({ data, route, params, url })
 
 		return {
 			...data,
 			...addMetaTagsPage(metaTags)
-		};
-	};
+		}
+	}
 }
 
 /**
@@ -48,16 +53,21 @@ export function metaLoadWithDataPage(
  * ```
  */
 export function metaLoadWithDataLayout(
-	callback: (context: { data: unknown; route: LoadEvent['route']; params: LoadEvent['params']; url: LoadEvent['url'] }) => LayoutMetadata
+	callback: (context: {
+		data: unknown
+		route: LoadEvent['route']
+		params: LoadEvent['params']
+		url: LoadEvent['url']
+	}) => LayoutMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaTags = callback({ data, route, params, url });
+		const metaTags = callback({ data, route, params, url })
 
 		return {
 			...data,
 			...addMetaTagsLayout(metaTags)
-		};
-	};
+		}
+	}
 }
 
 /**
@@ -77,14 +87,19 @@ export function metaLoadWithDataLayout(
  * ```
  */
 export function metaLoadWithDataResetLayout(
-	callback: (context: { data: unknown; route: LoadEvent['route']; params: LoadEvent['params']; url: LoadEvent['url'] }) => LayoutMetadata
+	callback: (context: {
+		data: unknown
+		route: LoadEvent['route']
+		params: LoadEvent['params']
+		url: LoadEvent['url']
+	}) => LayoutMetadata
 ): Load {
 	return async ({ data, route, params, url }) => {
-		const metaTags = callback({ data, route, params, url });
+		const metaTags = callback({ data, route, params, url })
 
 		return {
 			...data,
 			...addMetaTagsResetLayout(metaTags)
-		};
-	};
+		}
+	}
 }

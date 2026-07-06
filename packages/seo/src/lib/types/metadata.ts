@@ -3,16 +3,20 @@ import { z } from 'zod'
 // Sub-schemas
 const iconOpinionatedSchema = z.object({
 	svg: z.string().optional(),
-	small: z.object({
-		url: z.string(),
-		size: z.number(),
-		type: z.string().optional()
-	}).optional(),
-	large: z.object({
-		url: z.string(),
-		size: z.number(),
-		type: z.string().optional()
-	}).optional()
+	small: z
+		.object({
+			url: z.string(),
+			size: z.number(),
+			type: z.string().optional()
+		})
+		.optional(),
+	large: z
+		.object({
+			url: z.string(),
+			size: z.number(),
+			type: z.string().optional()
+		})
+		.optional()
 })
 
 const mediaSchema = z.object({
@@ -49,25 +53,29 @@ export const metadataSchema = z.object({
 	icon: z.union([z.string(), iconOpinionatedSchema]).optional(),
 
 	/** Used for Safari Pinned Tabs */
-	maskIcon: z.object({
-		/** Should provide an svg file */
-		url: z.string(),
-		/** Should provide a color in a hex value */
-		color: z.string().optional()
-	}).optional(),
+	maskIcon: z
+		.object({
+			/** Should provide an svg file */
+			url: z.string(),
+			/** Should provide a color in a hex value */
+			color: z.string().optional()
+		})
+		.optional(),
 
 	/**
 	 * Theme color for the browser UI elements
 	 * You can provide a single string (hex, rgb, etc.)
 	 * or an object with { light, dark } variants.
 	 */
-	theme: z.union([
-		z.string(),
-		z.object({
-			light: z.string(),
-			dark: z.string()
-		})
-	]).optional(),
+	theme: z
+		.union([
+			z.string(),
+			z.object({
+				light: z.string(),
+				dark: z.string()
+			})
+		])
+		.optional(),
 
 	/** Color scheme preference for the page */
 	colorScheme: z.string().optional(), // meta:color-scheme
@@ -82,10 +90,12 @@ export const metadataSchema = z.object({
 	 * Template for constructing children page titles
 	 * Example: { route: "/staff", template: "Staff: {page}" }
 	 */
-	titleTemplate: z.object({
-		route: z.string(),
-		template: z.string()
-	}).optional(), // used to infer og:title meta:title twitter:title
+	titleTemplate: z
+		.object({
+			route: z.string(),
+			template: z.string()
+		})
+		.optional(), // used to infer og:title meta:title twitter:title
 
 	/** @maxLength 200 chars for Twitter */
 	description: z.string().max(200).optional(), // og:description twitter:description meta:description
@@ -117,7 +127,8 @@ export const metadataSchema = z.object({
 	/** Media configuration */
 	image: z.union([z.string(), mediaSchema]).optional(),
 	images: z.array(mediaSchema).optional(),
-	video: z.union([z.string(), mediaSchema]).optional()
+	video: z.union([z.string(), mediaSchema]).optional(),
+	videos: z.array(mediaSchema).optional()
 })
 
 // Derive types from the schema - single source of truth!
