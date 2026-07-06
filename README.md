@@ -1,5 +1,7 @@
 # opensky/seo
 
+[![npm](https://img.shields.io/npm/v/@opensky/seo)](https://www.npmjs.com/package/@opensky/seo)
+
 A powerful, lightweight solution for managing meta tags in SvelteKit applications with intelligent data cascading.
 
 You define your metadata in `+page.ts` or `+layout.ts` load functions, using our helper functions for simpler code - like so:

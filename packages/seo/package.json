@@ -67,7 +67,6 @@
 		"svelte-meta",
 		"svelte-seo"
 	],
-	"private": false,
 	"sideEffects": [
 		"**/*.css"
 	],
