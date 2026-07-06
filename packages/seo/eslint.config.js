@@ -1,5 +1,4 @@
-import { defineConfig } from 'eslint/config'
-import { includeIgnoreFile } from '@eslint/compat'
+import { defineConfig, includeIgnoreFile } from 'eslint/config'
 import { fileURLToPath } from 'node:url'
 import js from '@eslint/js'
 import ts from 'typescript-eslint'
