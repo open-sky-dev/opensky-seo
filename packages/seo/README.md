@@ -356,6 +356,21 @@ type ContentTypeAdvanced = {
 
 > Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. Providing both is a TypeScript error; if both slip through anyway (plain JS), the plural version wins.
 
+### Absolute URLs
+
+Scrapers require absolute URLs for `og:image`, `og:url`, and video tags, so relative paths (`/og.png`) are automatically resolved against the current origin when the tags render. Absolute URLs pass through untouched.
+
+One caveat for prerendered pages: SvelteKit uses a placeholder origin (`http://sveltekit-prerender`) during prerendering, so resolution is skipped there unless you configure your real origin:
+
+```javascript
+// svelte.config.js
+const config = {
+	kit: {
+		prerender: { origin: 'https://mysite.com' }
+	}
+}
+```
+
 ## License
 
 MIT License

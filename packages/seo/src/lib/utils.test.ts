@@ -3,6 +3,7 @@ import { describe, expect, test } from 'bun:test'
 import {
 	normalizeRoute,
 	resolveTitleTemplate,
+	resolveUrl,
 	stripRouteGroups,
 	transformMetadataKeys,
 	TEMPLATE_KEY_PREFIX,
@@ -64,6 +65,26 @@ describe('route helpers', () => {
 		expect(normalizeRoute('/')).toBe('/')
 		expect(normalizeRoute('/blog/')).toBe('/blog')
 		expect(normalizeRoute('blog')).toBe('/blog')
+	})
+
+	test('resolveUrl makes relative URLs absolute against the origin', () => {
+		expect(resolveUrl('/og.png', 'https://example.com')).toBe('https://example.com/og.png')
+		expect(resolveUrl('./og.png', 'https://example.com')).toBe('https://example.com/og.png')
+		expect(resolveUrl('og.png', 'https://example.com')).toBe('https://example.com/og.png')
+	})
+
+	test('resolveUrl passes absolute and protocol-relative URLs through', () => {
+		expect(resolveUrl('https://cdn.example.com/og.png', 'https://example.com')).toBe(
+			'https://cdn.example.com/og.png'
+		)
+		expect(resolveUrl('//cdn.example.com/og.png', 'https://example.com')).toBe(
+			'https://cdn.example.com/og.png'
+		)
+	})
+
+	test('resolveUrl leaves URLs alone for the prerender placeholder origin', () => {
+		expect(resolveUrl('/og.png', 'http://sveltekit-prerender')).toBe('/og.png')
+		expect(resolveUrl('/og.png', '')).toBe('/og.png')
 	})
 
 	test('stripRouteGroups', () => {

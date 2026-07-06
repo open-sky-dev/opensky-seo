@@ -158,6 +158,24 @@ export function normalizeRoute(route: string): string {
 	return '/' + route.split('/').filter(Boolean).join('/')
 }
 
+/** SvelteKit's placeholder origin during prerendering when kit.prerender.origin isn't configured */
+const PRERENDER_PLACEHOLDER_ORIGIN = 'http://sveltekit-prerender'
+
+/**
+ * Resolves a URL against the site origin, since scrapers require absolute URLs
+ * for og:image, og:url, and friends. Absolute URLs pass through untouched.
+ * Left as-is when the origin is SvelteKit's prerender placeholder - set
+ * kit.prerender.origin in svelte.config to get absolute URLs in prerendered pages.
+ */
+export function resolveUrl(url: string, origin: string): string {
+	if (!url || !origin || origin === PRERENDER_PLACEHOLDER_ORIGIN) return url
+	try {
+		return new URL(url, origin).href
+	} catch {
+		return url
+	}
+}
+
 /** Removes group segments like '(marketing)', which don't appear in URLs */
 export function stripRouteGroups(route: string): string {
 	const segments = route.split('/').filter((s) => s && !(s.startsWith('(') && s.endsWith(')')))

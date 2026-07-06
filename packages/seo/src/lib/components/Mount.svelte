@@ -1,6 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { resolveTitleTemplate } from '../utils'
+	import { resolveTitleTemplate, resolveUrl } from '../utils'
 
 	// page from $app/state is reactive, so this stays current across navigations and invalidations
 	const data = $derived(page.data)
@@ -40,13 +40,18 @@
 	const hasMeta = (key: string) => {
 		return data[`_meta-${key}`] !== undefined && data[`_meta-${key}`] !== null
 	}
+
+	// Scrapers require absolute URLs for og:image/og:url; resolve relative paths
+	// against the current origin (reads page.url reactively at render)
+	const absUrl = (url: string) => resolveUrl(url, page.url.origin)
 </script>
 
 <svelte:head>
 	<!-- SEO: Canonical URL -->
 	{#if hasMeta('canonical')}
-		<link rel="canonical" href={getMetaValue('canonical')} />
-		<meta property="og:url" content={getMetaValue('canonical')} />
+		{@const canonical = absUrl(getMetaValue('canonical'))}
+		<link rel="canonical" href={canonical} />
+		<meta property="og:url" content={canonical} />
 	{/if}
 
 	<!-- APPEARENCE: Icon -->
@@ -154,12 +159,16 @@
 	{#if hasMeta('image')}
 		{@const image = getMetaValue('image')}
 		{#if typeof image === 'string'}
-			<meta property="og:image" content={image} />
-			<meta name="twitter:image" content={image} />
+			{@const imageUrl = absUrl(image)}
+			<meta property="og:image" content={imageUrl} />
+			<meta name="twitter:image" content={imageUrl} />
 		{:else}
-			<meta property="og:image" content={image.url} />
-			{#if image.secureUrl}<meta property="og:image:secure_url" content={image.secureUrl} />{/if}
-			<meta name="twitter:image" content={image.url} />
+			<meta property="og:image" content={absUrl(image.url)} />
+			{#if image.secureUrl}<meta
+					property="og:image:secure_url"
+					content={absUrl(image.secureUrl)}
+				/>{/if}
+			<meta name="twitter:image" content={absUrl(image.url)} />
 			{#if image.width}<meta property="og:image:width" content={image.width} />{/if}
 			{#if image.height}<meta property="og:image:height" content={image.height} />{/if}
 			{#if image.type}<meta property="og:image:type" content={image.type} />{/if}
@@ -174,13 +183,16 @@
 		{#each images as image, i (i)}
 			<!-- Set twitter:image only for the first image -->
 			{#if i === 0}
-				<meta name="twitter:image" content={image.url} />
+				<meta name="twitter:image" content={absUrl(image.url)} />
 				{#if image.alt}
 					<meta name="twitter:image:alt" content={image.alt} />
 				{/if}
 			{/if}
-			<meta property="og:image" content={image.url} />
-			{#if image.secureUrl}<meta property="og:image:secure_url" content={image.secureUrl} />{/if}
+			<meta property="og:image" content={absUrl(image.url)} />
+			{#if image.secureUrl}<meta
+					property="og:image:secure_url"
+					content={absUrl(image.secureUrl)}
+				/>{/if}
 			{#if image.width}<meta property="og:image:width" content={image.width} />{/if}
 			{#if image.height}<meta property="og:image:height" content={image.height} />{/if}
 			{#if image.type}<meta property="og:image:type" content={image.type} />{/if}
@@ -194,11 +206,12 @@
 	{#if hasMeta('video')}
 		{@const video = getMetaValue('video')}
 		{#if typeof video === 'string'}
-			<meta property="og:video" content={video} />
-			<meta name="twitter:player" content={video} />
+			{@const videoUrl = absUrl(video)}
+			<meta property="og:video" content={videoUrl} />
+			<meta name="twitter:player" content={videoUrl} />
 		{:else}
-			<meta property="og:video" content={video.url} />
-			<meta name="twitter:player" content={video.url} />
+			<meta property="og:video" content={absUrl(video.url)} />
+			<meta name="twitter:player" content={absUrl(video.url)} />
 			{#if video.width}
 				<meta property="og:video:width" content={video.width} />
 				<meta name="twitter:player:width" content={video.width} />
@@ -215,7 +228,7 @@
 		{#each videos as video, i (i)}
 			<!-- Set twitter:player only for the first video -->
 			{#if i === 0}
-				<meta name="twitter:player" content={video.url} />
+				<meta name="twitter:player" content={absUrl(video.url)} />
 				{#if video.width}
 					<meta name="twitter:player:width" content={video.width} />
 				{/if}
@@ -223,8 +236,11 @@
 					<meta name="twitter:player:height" content={video.height} />
 				{/if}
 			{/if}
-			<meta property="og:video" content={video.url} />
-			{#if video.secureUrl}<meta property="og:video:secure_url" content={video.secureUrl} />{/if}
+			<meta property="og:video" content={absUrl(video.url)} />
+			{#if video.secureUrl}<meta
+					property="og:video:secure_url"
+					content={absUrl(video.secureUrl)}
+				/>{/if}
 			{#if video.width}<meta property="og:video:width" content={video.width} />{/if}
 			{#if video.height}<meta property="og:video:height" content={video.height} />{/if}
 			{#if video.type}<meta property="og:video:type" content={video.type} />{/if}
