@@ -2,13 +2,17 @@
 import { describe, expect, test } from 'bun:test'
 import {
 	normalizeRoute,
+	resolveOgImage,
 	resolveTitleTemplate,
 	resolveUrl,
 	stripRouteGroups,
 	transformMetadataKeys,
+	IMAGE_ALT_KEY,
+	IMAGE_PARAM_PREFIX,
 	TEMPLATE_KEY_PREFIX,
 	TEMPLATE_RESET_KEY
 } from './utils'
+import { og, ogParams } from './og'
 import { addMetaTagsLayout, addMetaTagsPage, addMetaTagsResetLayout } from './add-meta-tags'
 
 describe('transformMetadataKeys', () => {
@@ -173,6 +177,108 @@ describe('media exclusivity', () => {
 		)
 		expect(result['_meta-image']).toBeUndefined()
 		expect(result['_meta-images']).toEqual([{ url: 'b.jpg' }])
+	})
+})
+
+describe('generated images (og / ogParams)', () => {
+	test('og() explodes into a template key plus one key per param', () => {
+		const result = transformMetadataKeys({
+			image: og('/og', { heading: 'My Site', theme: 'dark' }, { alt: 'Site card' })
+		})
+		expect(result['_meta-image']).toEqual({
+			og: '/og',
+			width: 1200,
+			height: 630,
+			type: 'image/png'
+		})
+		expect(result[`${IMAGE_PARAM_PREFIX}heading`]).toBe('My Site')
+		expect(result[`${IMAGE_PARAM_PREFIX}theme`]).toBe('dark')
+		expect(result[IMAGE_ALT_KEY]).toBe('Site card')
+	})
+
+	test('ogParams() writes only param keys, leaving the template untouched', () => {
+		const result = transformMetadataKeys({ image: ogParams({ heading: 'My Post' }) })
+		expect(result['_meta-image']).toBeUndefined()
+		expect(result[`${IMAGE_PARAM_PREFIX}heading`]).toBe('My Post')
+	})
+
+	test('scenario: layout defines the card, page hydrates it', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsLayout({ image: og('/og', { heading: "Jake's Blog" }) }, '/'),
+			...addMetaTagsPage({
+				title: 'Why Svelte Rocks',
+				image: ogParams({ heading: 'Why Svelte Rocks', author: 'Jane Doe' }, { alt: 'Post card' })
+			})
+		}
+
+		expect(resolveOgImage(pageData)).toEqual({
+			url: '/og?author=Jane+Doe&heading=Why+Svelte+Rocks',
+			width: 1200,
+			height: 630,
+			type: 'image/png',
+			alt: 'Post card'
+		})
+	})
+
+	test('scenario: section swaps the route, params cascade through and null removes', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsLayout({ image: og('/og', { heading: "Jake's Blog", theme: 'dark' }) }, '/'),
+			...addMetaTagsLayout({ image: og('/og/product', { heading: null, badge: 'Shop' }) }, '/shop'),
+			...addMetaTagsPage({ image: ogParams({ price: 29 }) })
+		}
+
+		// theme inherited across the route change, heading removed via null
+		expect(resolveOgImage(pageData)?.url).toBe('/og/product?badge=Shop&price=29&theme=dark')
+	})
+
+	test('scenario: a plain image value overrides the generated template', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsLayout({ image: og('/og', { heading: 'Site' }) }, '/'),
+			...addMetaTagsPage({ image: '/photos/party.jpg' })
+		}
+
+		expect(pageData['_meta-image']).toBe('/photos/party.jpg')
+		// leftover param keys are inert - resolveOgImage refuses non-template values
+		expect(resolveOgImage(pageData)).toBeNull()
+	})
+
+	test('scenario: one-off page-level card with custom dimensions', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsPage({
+				image: og(
+					'/og/event',
+					{ title: 'Launch Party' },
+					{ width: 1600, height: 900, type: 'image/webp', alt: 'Launch Party' }
+				)
+			})
+		}
+
+		expect(resolveOgImage(pageData)).toEqual({
+			url: '/og/event?title=Launch+Party',
+			width: 1600,
+			height: 900,
+			type: 'image/webp',
+			alt: 'Launch Party'
+		})
+	})
+
+	test('params are URL-encoded and sorted for stable URLs', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsLayout({ image: og('/og', { z: 'a&b=c', a: 'Ünïcode & spaces' }) }, '/')
+		}
+
+		expect(resolveOgImage(pageData)?.url).toBe('/og?a=%C3%9Cn%C3%AFcode+%26+spaces&z=a%26b%3Dc')
+	})
+
+	test('og() without params produces a bare URL; alt cascades deepest-wins', () => {
+		const pageData: Record<string, unknown> = {
+			...addMetaTagsLayout({ image: og('/og', {}, { alt: 'Default card' }) }, '/'),
+			...addMetaTagsPage({ image: ogParams({}, { alt: 'Specific card' }) })
+		}
+
+		const resolved = resolveOgImage(pageData)
+		expect(resolved?.url).toBe('/og')
+		expect(resolved?.alt).toBe('Specific card')
 	})
 })
 

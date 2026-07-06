@@ -24,6 +24,13 @@ Title templates are now stored in load data keyed by their route **verbatim** (e
 - Pages without an explicit `type` now emit default `og:type: website` and `twitter:card: summary` tags so every page has a card type.
 - Added a `default` condition to package `exports` so non-Svelte-aware tooling (vitest, plain node) can resolve the package.
 
+#### Generated Share Images
+
+- New `og(route, params?, options?)` helper: point the `image` property at an image-generating endpoint (query params in, image out). Returns a template that emits `og:image` with `width`/`height`/`type`/`alt` tags automatically (1200×630 PNG by default).
+- New `ogParams(params, options?)` helper: contribute params to the template inherited from a parent layout without restating the route. Params merge per param down the route tree (deepest wins), the same way title templates compose; `null` removes an inherited param.
+- A plain `image` value anywhere in the cascade overrides the generated template. Both helpers accept a generic for the endpoint's param shape (e.g. `ComponentProps<typeof Card>`) for compile-time checking.
+- The endpoint itself stays out of scope — any request handler that renders query params to an image works. The example app includes a minimal SVG one.
+
 #### Zero Dependencies
 
 - Removed Zod — the package now has no runtime dependencies. The metadata types are hand-written TypeScript (same shapes as before), so nothing ships to the client for validation.

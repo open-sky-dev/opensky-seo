@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { page } from '$app/state'
-	import { resolveTitleTemplate, resolveUrl } from '../utils'
+	import { resolveOgImage, resolveTitleTemplate, resolveUrl } from '../utils'
+	import { isOgTemplate } from '../og'
 
 	// page from $app/state is reactive, so this stays current across navigations and invalidations
 	const data = $derived(page.data)
@@ -44,6 +45,14 @@
 	// Scrapers require absolute URLs for og:image/og:url; resolve relative paths
 	// against the current origin (reads page.url reactively at render)
 	const absUrl = (url: string) => resolveUrl(url, page.url.origin)
+
+	// A generated image (og()/ogParams()) resolves to a Media object from the
+	// merged cascade; plain string/Media values pass through untouched
+	const resolvedImage = $derived.by(() => {
+		const raw = data['_meta-image']
+		if (raw === undefined || raw === null) return null
+		return isOgTemplate(raw) ? resolveOgImage(data) : raw
+	})
 </script>
 
 <svelte:head>
@@ -156,8 +165,8 @@
 	{/if}
 
 	<!-- SHARING: Images -->
-	{#if hasMeta('image')}
-		{@const image = getMetaValue('image')}
+	{#if resolvedImage}
+		{@const image = resolvedImage}
 		{#if typeof image === 'string'}
 			{@const imageUrl = absUrl(image)}
 			<meta property="og:image" content={imageUrl} />

@@ -356,6 +356,52 @@ type ContentTypeAdvanced = {
 
 > Note: Properties like `image`/`images` and `video`/`videos` are mutually exclusive. Providing both is a TypeScript error; if both slip through anyway (plain JS), the plural version wins.
 
+### Generated Share Images
+
+For share images generated on the fly (a card with the post's title on it), `og()` points the `image` property at an image endpoint. The contract is plain: query params in, image out — so it works with any generator (satori, takumi, a prerendered folder of PNGs).
+
+```typescript
+// src/routes/blog/+layout.ts - define the card once for the section
+import { metaLoad, og } from '@opensky/seo'
+
+export const load = metaLoad.layout({
+	image: og('/og', { heading: 'Blog', theme: 'dark' })
+})
+
+// src/routes/blog/[slug]/+page.ts - hydrate it with page data
+import { metaLoadWithData, ogParams } from '@opensky/seo'
+
+export const load = metaLoadWithData.page(({ data }) => ({
+	title: data.post.title,
+	image: ogParams(
+		{ heading: data.post.title, author: data.post.author },
+		{ alt: `Card for ${data.post.title}` }
+	)
+}))
+// → og:image = /og?author=…&heading=…&theme=dark (route and theme inherited)
+```
+
+`og(route, params?, options?)` defines the template: the endpoint route, base params, and output details (`width`/`height` default to 1200×630, `type` to `image/png`, plus `alt`). `ogParams(params, options?)` contributes params to the inherited template without restating the route. The emitted tags include `og:image:width/height/type/alt` automatically.
+
+Rules, all instances of the cascade's "deepest wins per key":
+
+- `og()` sets the template — a deeper `og()` replaces the route and output options.
+- `ogParams()` sets individual params — they merge per param across levels.
+- Params survive an `og()` route change; set a param to `null` to remove an inherited value.
+- A plain `image` value (string or Media object) anywhere overrides the generated template entirely.
+- `alt` can be set by either helper; deepest wins.
+
+For type safety, pass your endpoint's param shape as a generic — your card component's props type works directly:
+
+```typescript
+import type { ComponentProps } from 'svelte'
+import type Card from '$lib/og/Card.svelte'
+
+image: og<ComponentProps<typeof Card>>('/og', { heading: post.title })
+```
+
+The endpoint itself is out of this package's scope — it's any request handler that turns query params into an image (see `examples/sveltekit/src/routes/og/+server.ts` for a minimal one; for production PNGs, render a component with an engine like [takumi](https://github.com/kane50613/takumi) or [satori](https://github.com/vercel/satori)).
+
 ### Absolute URLs
 
 Scrapers require absolute URLs for `og:image`, `og:url`, and video tags, so relative paths (`/og.png`) are automatically resolved against the current origin when the tags render. Absolute URLs pass through untouched.

@@ -1,18 +1,17 @@
-import { metaLoad } from '@opensky/seo';
+import { metaLoad, og } from '@opensky/seo';
 
 export const load = metaLoad.layout({
 	title: 'Blog',
-	titleTemplate: { route: '/blog', template: '{page} | Blog | SvelteKit Meta Examples' },
+	titleTemplate: '{page} | Blog | SvelteKit Meta Examples',
 	description: 'Read our latest articles and updates about SvelteKit Meta',
 	type: 'article',
 	author: ['Blog Team', 'SvelteKit Meta'],
 	twitterCreator: '@blogteam',
-	image: {
-		url: '/blog-og-image.jpg',
-		secureUrl: 'https://example.com/blog-og-image.jpg',
-		type: 'image/jpeg',
-		width: 1200,
-		height: 630,
-		alt: 'SvelteKit Meta Blog - Latest articles and updates'
-	}
+	// Generated share image: the /og endpoint renders a card from these params.
+	// Pages below contribute their own params with ogParams() - see blog/[slug].
+	image: og(
+		'/og',
+		{ heading: 'Blog', theme: 'dark' },
+		{ type: 'image/svg+xml', alt: 'SvelteKit Meta Blog card' }
+	)
 });

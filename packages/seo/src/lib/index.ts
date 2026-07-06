@@ -116,6 +116,9 @@ export const addMetaTags = {
 
 export { default as SeoTags } from './components/Mount.svelte'
 
+export { og, ogParams } from './og'
+export type { OgImageOptions, OgImageTemplate, OgImageParams, OgParamsRecord } from './og'
+
 export * from './types/metadata'
 
 export default {

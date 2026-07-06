@@ -111,9 +111,14 @@ type MetadataCommon = {
 	type?: ContentType
 }
 
+import type { OgImageTemplate, OgImageParams } from '../og'
+
 // image/images and video/videos are mutually exclusive - enforced at the type
-// level so providing both is a compile error rather than a runtime warning
-type ImageXor = { image?: string | Media; images?: never } | { image?: never; images?: Media[] }
+// level so providing both is a compile error rather than a runtime warning.
+// image also accepts the generated-image helpers og() and ogParams().
+type ImageXor =
+	| { image?: string | Media | OgImageTemplate | OgImageParams; images?: never }
+	| { image?: never; images?: Media[] }
 type VideoXor = { video?: string | Media; videos?: never } | { video?: never; videos?: Media[] }
 
 export type BaseMetadata = MetadataCommon & ImageXor & VideoXor

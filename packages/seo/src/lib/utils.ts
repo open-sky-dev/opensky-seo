@@ -1,4 +1,5 @@
-import type { BaseMetadata, LayoutMetadata, PageMetadata } from './types/metadata'
+import type { BaseMetadata, LayoutMetadata, Media, PageMetadata } from './types/metadata'
+import { isOgTemplate, isOgParams } from './og'
 
 /** Prefixed on all metadata keys added to load data */
 export const PREFIX = '_meta'
@@ -47,6 +48,16 @@ export const TEMPLATE_KEY_PREFIX = `${PREFIX}-titleTemplate:`
  * this boundary are ignored when resolving the active template.
  */
 export const TEMPLATE_RESET_KEY = `${PREFIX}-titleTemplateResetAt`
+
+/**
+ * Generated image params get one key each (e.g. '_meta-image-param:heading')
+ * so layouts and pages compose params per key through the cascade, the same
+ * way title templates coexist.
+ */
+export const IMAGE_PARAM_PREFIX = `${PREFIX}-image-param:`
+
+/** Alt text for the generated image; cascades independently, deepest wins */
+export const IMAGE_ALT_KEY = `${PREFIX}-image-alt`
 
 /**
  * Generates a reset object with null values for all possible metadata keys.
@@ -101,6 +112,28 @@ export function transformMetadataKeys(
 			const normalized = normalizeTitleTemplate(value, routeId)
 			if (normalized) {
 				result[`${TEMPLATE_KEY_PREFIX}${normalized.route}`] = normalized.template
+			}
+			continue
+		}
+
+		// Handle generated image helpers on the image property
+		if (key === 'image' && isOgTemplate(value)) {
+			const { og: route, params, alt, width, height, type } = value
+			result[`${PREFIX}-image`] = { og: route, width, height, type }
+			if (alt !== undefined) result[IMAGE_ALT_KEY] = alt
+			for (const [param, paramValue] of Object.entries(params)) {
+				// null is written deliberately - it clears an inherited param
+				if (paramValue === undefined) continue
+				result[`${IMAGE_PARAM_PREFIX}${param}`] = paramValue
+			}
+			continue
+		}
+		if (key === 'image' && isOgParams(value)) {
+			// Params only - the template key is left untouched so the parent's og() applies
+			if (value.alt !== undefined) result[IMAGE_ALT_KEY] = value.alt
+			for (const [param, paramValue] of Object.entries(value.ogParams)) {
+				if (paramValue === undefined) continue
+				result[`${IMAGE_PARAM_PREFIX}${param}`] = paramValue
 			}
 			continue
 		}
@@ -228,6 +261,39 @@ export function resolveTitleTemplate(
 	}
 
 	return best?.template ?? null
+}
+
+/**
+ * Resolves a generated image (defined via og()/ogParams()) from merged load
+ * data into a renderable Media object. Params are collected from their
+ * individual cascade keys, sorted for stable (cacheable) URLs, and nullish
+ * params are dropped. Returns null when the image isn't a generated template
+ * (plain string/Media values render directly).
+ *
+ * @param data - Merged page data (page.data)
+ */
+export function resolveOgImage(data: Record<string, unknown>): Media | null {
+	const template = data[`${PREFIX}-image`]
+	if (!isOgTemplate(template)) return null
+
+	const params: [string, string][] = []
+	for (const [key, value] of Object.entries(data)) {
+		if (!key.startsWith(IMAGE_PARAM_PREFIX)) continue
+		if (value === null || value === undefined) continue
+		params.push([key.slice(IMAGE_PARAM_PREFIX.length), String(value)])
+	}
+	params.sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+
+	const query = new URLSearchParams(params).toString()
+	const alt = data[IMAGE_ALT_KEY]
+
+	return {
+		url: query ? `${template.og}?${query}` : template.og,
+		width: template.width,
+		height: template.height,
+		type: template.type,
+		...(typeof alt === 'string' ? { alt } : {})
+	}
 }
 
 /**
