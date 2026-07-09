@@ -104,9 +104,9 @@ describe('resolveTitleTemplate', () => {
 		[`${TEMPLATE_KEY_PREFIX}${route}`]: template
 	})
 
-	test('root template applies everywhere, including the home page', () => {
+	test('root template applies below root, but not to the home page itself', () => {
 		const data = { ...tpl('/', 'Acme — {page}') }
-		expect(resolveTitleTemplate(data, '/')).toBe('Acme — {page}')
+		expect(resolveTitleTemplate(data, '/')).toBeNull()
 		expect(resolveTitleTemplate(data, '/about')).toBe('Acme — {page}')
 	})
 

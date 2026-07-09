@@ -12,7 +12,7 @@ import { metaLoad } from '@opensky/seo'
 
 export const load = metaLoad.layout({
 	sitename: 'My Awesome Site',
-	title: 'Home',
+	title: 'My Awesome Site',
 	titleTemplate: 'My Awesome Site - {page}',
 	description: 'A fantastic SvelteKit application',
 	icon: './favicon.png'
@@ -63,7 +63,7 @@ import { metaLoad } from '@opensky/seo'
 
 export const load = metaLoad.layout({
 	sitename: 'My SvelteKit App',
-	title: 'Welcome',
+	title: 'My SvelteKit App',
 	titleTemplate: 'My SvelteKit App - {page}',
 	description: 'A fantastic SvelteKit application',
 	icon: './favicon.png'
@@ -185,7 +185,7 @@ titleTemplate: { route: '/blog', template: 'Blog - {page}' }
 ### Matching Rules
 
 - A template applies to routes **below** its route - not the route itself. In the example above, visiting `/blog` produces "My Site - Blog" (the parent template), while `/blog/my-amazing-post` produces "Blog - My Amazing Post". This lets a section layout set its own title and a template for its children without the template applying to the section's landing page.
-- The root template (`/`) is the final fallback and applies everywhere, including the home page.
+- The root template (`/`) is the final fallback for every other route, but the same own-route exclusion applies: the home page (`/`) renders its title verbatim. Want a templated home page title? Write it out in full (`title: 'My Site - Home'`).
 - When several templates match, the most specific (deepest route) wins.
 - Matching is based on SvelteKit route ids, so layouts with dynamic segments (`/blog/[slug]`) work, and route groups (`/(marketing)`) are ignored since they don't appear in URLs.
 - `resetLayout` clears inherited templates along with the rest of the metadata cascade.

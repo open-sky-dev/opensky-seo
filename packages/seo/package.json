@@ -12,7 +12,7 @@
 	},
 	"description": "SvelteKit meta tags and seo utility",
 	"author": "notnotjake",
-	"version": "1.2.0",
+	"version": "1.2.1",
 	"repository": {
 		"directory": "packages/seo",
 		"type": "git",

@@ -223,10 +223,12 @@ const isAtOrBelow = (route: string, ancestor: string): boolean =>
 /**
  * A template applies to routes strictly below its declared route - a section's
  * template shouldn't format the section's own landing page; the parent template
- * handles that. The root template is the fallback and applies everywhere.
+ * handles that. The same rule holds at the root: the root template is the
+ * fallback for every route except '/' itself, so the home page keeps its
+ * hand-written title.
  */
 const templateAppliesTo = (templateRoute: string, currentRoute: string): boolean =>
-	templateRoute === '/' ? true : currentRoute.startsWith(templateRoute + '/')
+	templateRoute === '/' ? currentRoute !== '/' : currentRoute.startsWith(templateRoute + '/')
 
 /**
  * Resolves the active title template for the current route from merged load data.

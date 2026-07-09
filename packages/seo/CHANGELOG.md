@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.1] - 2026-07-08
+
+### Fixed
+
+- The root title template no longer applies to the home page (`/`) itself. Templates apply strictly below the route that declares them, and the root is no longer an exception — the home page now renders its title verbatim, matching how section templates already skip their own landing page. Previously there was no way to opt the home page out of the root template; if you relied on the old behavior, write the home title out in full (e.g. `title: 'My Site - Home'`).
+
 ## [1.2.0] - 2026-07-06
 
 ### Title Template Overhaul

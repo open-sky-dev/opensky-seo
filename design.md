@@ -73,7 +73,7 @@ Different routes produce different keys, so SvelteKit's shallow merge keeps them
 At render time, `SeoTags` collects the template keys from `page.data` and resolves the winner against the current `page.route.id` (the route *pattern*, so `[slug]` pages and `(group)` segments behave correctly):
 
 - A template applies to routes **strictly below** its route - that's the own-route exclusion that makes `/staff` render "My Site - Staff".
-- The root (`/`) template is the fallback and applies everywhere, including the home page.
+- The root (`/`) template is the fallback for every other route, but the own-route exclusion applies to it too: the home page renders its title verbatim. (There's no `title.absolute`-style escape hatch, so if the root template also formatted `/`, a plain untemplated home title would be unexpressible.)
 - Among matches, the deepest route wins.
 
 Because the load helpers receive the SvelteKit event, they know `event.route.id` - so the route in a template is optional. Writing `titleTemplate: 'Staff: {page}'` in a layout automatically scopes it to that layout's route, which is what you mean 99% of the time. The `{ route, template }` form remains for explicit scoping, and `resetLayout` writes a boundary marker so inherited templates (whose dynamic keys can't be enumerated and nulled) are ignored beyond the reset.
